@@ -26,6 +26,7 @@
         /* Botones de Evaluación */
         .eval-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold;}
         .eval-btn.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .row-selected { background-color: #eff6ff !important; border-left: 4px solid #3b82f6; }
     </style>
 </head>
 <body class="pb-10">
@@ -34,9 +35,17 @@
     <header class="bg-navy text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-50">
         <h1 class="text-xl font-bold uppercase tracking-wider">Perfil y Seguimiento de Entrenamiento - FMDS</h1>
         <select id="gl-selector" class="bg-white text-navy px-4 py-2 rounded font-semibold border-none outline-none cursor-pointer" onchange="changeGL()">
-            <!-- Opciones generadas dinámicamente -->
+            <!-- Generado dinámicamente -->
         </select>
     </header>
+
+    <!-- Banner Modo Inspección de Histórico -->
+    <div id="view-mode-banner" class="hidden bg-amber-500 text-white px-6 py-2 text-sm font-bold flex justify-between items-center shadow-inner">
+        <span><i class="fas fa-eye mr-2"></i> CONSULTANDO EVALUACIÓN PASADA DEL <span id="view-mode-date">--</span></span>
+        <button onclick="resetToNewEvaluation()" class="bg-white text-amber-800 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 transition shadow">
+            <i class="fas fa-plus mr-1"></i> Restablecer / Nueva Evaluación
+        </button>
+    </div>
 
     <div class="max-w-7xl mx-auto mt-6 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
 
@@ -149,12 +158,33 @@
             </div>
         </div>
 
+        <!-- SECCIÓN DE ÚLTIMOS COMENTARIOS REGISTRADOS EN PANTALLA PRINCIPAL -->
+        <div class="bg-slate-50 border border-slate-200 rounded-lg shadow-sm md:col-span-3 p-4">
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center">
+                <i class="fas fa-comment-dots text-blue-600 mr-2"></i> ÚLTIMOS COMENTARIOS Y ACUERDOS REGISTRADOS
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="bg-white p-3 rounded border">
+                    <span class="font-bold text-gray-500 block uppercase mb-1">Evaluador(es):</span>
+                    <p id="disp-evaluador" class="text-gray-800 font-semibold italic">Sin registro previo</p>
+                </div>
+                <div class="bg-white p-3 rounded border">
+                    <span class="font-bold text-gray-500 block uppercase mb-1">Hallazgos / Observaciones:</span>
+                    <p id="disp-observaciones" class="text-gray-700 whitespace-pre-line">Sin observaciones registradas</p>
+                </div>
+                <div class="bg-white p-3 rounded border">
+                    <span class="font-bold text-gray-500 block uppercase mb-1">Compromisos / Acuerdos:</span>
+                    <p id="disp-compromisos" class="text-gray-700 whitespace-pre-line">Sin acuerdos registrados</p>
+                </div>
+            </div>
+        </div>
+
         <!-- 5. EVALUACIÓN Y 6. HISTORIAL Y TENDENCIA -->
         <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             
-            <!-- 5. EVALUACIÓN DEL GL -->
+            <!-- 5. EVALUACIÓN DEL GL & NAVEGACIÓN -->
             <div class="bg-white border rounded-lg shadow-sm relative">
-                <div class="card-header absolute top-0 left-0">5. EVALUACIÓN DEL GL (ÚLTIMA REVISIÓN)</div>
+                <div class="card-header absolute top-0 left-0">5. EVALUACIÓN DEL GL (REVISIÓN)</div>
                 <div class="p-6 pt-12">
                     <table class="w-full text-sm">
                         <thead>
@@ -181,6 +211,23 @@
                             </tr>
                         </tfoot>
                     </table>
+
+                    <!-- CAMPOS DE COMENTARIOS PARA LA EVALUACIÓN -->
+                    <div class="mt-6 border-t pt-4 space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Evaluador(es) / Coach:</label>
+                            <input type="text" id="input-evaluador" placeholder="Ej. Gisela Espinoza / Arturo Hernandez" class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Hallazgos y Observaciones:</label>
+                            <textarea id="input-observaciones" rows="3" placeholder="Escribe las observaciones identificadas durante la revisión..." class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Compromisos y Acuerdos:</label>
+                            <textarea id="input-compromisos" rows="3" placeholder="1° Mantener actualizadas las gráficas... 2° Registrar evidencia..." class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                        </div>
+                    </div>
+
                     <button onclick="saveEvaluation()" class="w-full mt-4 bg-navy text-white py-2 rounded hover:bg-slate-800 transition font-bold shadow-md">
                         <i class="fas fa-save mr-2"></i> Guardar Evaluación Semanal
                     </button>
@@ -189,17 +236,17 @@
 
             <!-- 6. HISTORIAL Y TENDENCIA DE MEJORA -->
             <div class="bg-white border rounded-lg shadow-sm relative">
-                <div class="card-header absolute top-0 left-0">6. HISTORIAL Y TENDENCIA DE MEJORA (OBJETIVO NOVIEMBRE: 100%)</div>
+                <div class="card-header absolute top-0 left-0">6. HISTORIAL Y TENDENCIA DE MEJORA (META NOVIEMBRE: 100%)</div>
                 <div class="p-6 pt-12">
-                    <div class="overflow-y-auto max-h-[350px]">
+                    <div class="overflow-y-auto max-h-[500px]">
                         <table class="w-full text-sm text-center border-collapse">
                             <thead class="sticky top-0 bg-white shadow-sm border-b">
                                 <tr class="text-xs text-gray-500">
                                     <th class="py-2 text-left pl-2">FECHA</th>
-                                    <th class="py-2">AVANCE GMB</th>
-                                    <th class="py-2">EVAL. GL</th>
+                                    <th class="py-2">GMB</th>
+                                    <th class="py-2">EVAL.</th>
                                     <th class="py-2">NIVEL</th>
-                                    <th class="py-2 pr-2">TENDENCIA META (100%)</th>
+                                    <th class="py-2">ACCIONES</th>
                                 </tr>
                             </thead>
                             <tbody id="history-body">
@@ -214,7 +261,6 @@
     </div>
 
     <script>
-        // Datos de los Group Leaders
         const groupLeaders = [
             { name: "Angel Serrano", area: "ESTAMPADO", defaultPhoto: "ANGEL SERRANO.png" },
             { name: "Pedro Torres", area: "ESTAMPADO", defaultPhoto: "PEDRO TORRES.png" },
@@ -227,7 +273,6 @@
             { name: "Arturo Teniente", area: "SOLDADURA", defaultPhoto: "ARTURO TENIENTE.png" }
         ];
 
-        // Temas para el Roadmap
         const roadmapTemas = [
             { id: "seguridad", name: "Seguridad", icon: "fa-shield-alt", color: "text-green-600" },
             { id: "calidad", name: "Calidad", icon: "fa-check-circle", color: "text-blue-600" },
@@ -236,7 +281,6 @@
             { id: "rh", name: "Recursos Humanos", icon: "fa-users", color: "text-orange-500" }
         ];
 
-        // Criterios de Evaluación
         const evalCriterios = [
             "Actitud y disposición para aprender",
             "Preparación para la Reunión",
@@ -248,10 +292,11 @@
         let currentGL = groupLeaders[0].name;
         let roadmapData = {}; 
         let evalData = [0,0,0,0,0];
+        let viewingEvaluationId = null;
 
-        // --- INICIALIZACIÓN ---
         function init() {
             const selector = document.getElementById("gl-selector");
+            selector.innerHTML = "";
             groupLeaders.forEach(gl => {
                 let opt = document.createElement("option");
                 opt.value = gl.name;
@@ -266,6 +311,7 @@
 
         function changeGL() {
             currentGL = document.getElementById("gl-selector").value;
+            resetToNewEvaluation();
             loadGL();
         }
 
@@ -274,7 +320,6 @@
             document.getElementById("gl-name").textContent = gl.name;
             document.getElementById("gl-area").textContent = gl.area;
             
-            // Cargar foto
             const imgEl = document.getElementById("gl-photo");
             const fallbackEl = document.getElementById("gl-photo-fallback");
             
@@ -283,7 +328,6 @@
             imgEl.src = gl.defaultPhoto;
             fallbackEl.textContent = gl.name;
 
-            // Cargar datos de Roadmap
             let savedRoadmap = localStorage.getItem(`roadmap_${currentGL}`);
             if(savedRoadmap) {
                 roadmapData = JSON.parse(savedRoadmap);
@@ -291,15 +335,13 @@
                 roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
             }
 
-            // Limpiar matriz de evaluación actual
             evalData = [0,0,0,0,0]; 
             updateEvalUI();
-            
             updateRoadmapUI();
             loadHistory();
+            updateLatestCommentsDisplay();
         }
 
-        // --- ROADMAP DE APRENDIZAJE ---
         function renderRoadmap() {
             const tbody = document.getElementById("roadmap-body");
             tbody.innerHTML = "";
@@ -369,7 +411,6 @@
             return generalGMB;
         }
 
-        // --- EVALUACIÓN (SECCIÓN 5) ---
         function renderEvaluacion() {
             const tbody = document.getElementById("eval-body");
             tbody.innerHTML = "";
@@ -439,14 +480,14 @@
             }
         }
 
-        // --- GUARDAR EVALUACIÓN Y REGISTRO COMPLETO EN EL HISTORIAL ---
+        // --- GUARDAR EVALUACIÓN Y COMENTARIOS ---
         function saveEvaluation() {
             if(evalData.includes(0)) {
                 alert("Por favor, califica todos los 5 elementos (selecciona de 1 a 3) antes de guardar.");
                 return;
             }
 
-            let currentGMB = updateRoadmapUI(); // Obtener avance del Roadmap actual
+            let currentGMB = updateRoadmapUI();
             let total = evalData.reduce((a, b) => a + b, 0);
             let pct = Math.round((total / 15) * 100);
             let dateStr = new Date().toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'});
@@ -456,29 +497,124 @@
             if (pct >= 80) { perfLabel = "EXCELENTE"; emoji = "😀"; }
             else if (pct >= 60) { perfLabel = "REGULAR"; emoji = "🙂"; }
 
+            let evaluatorVal = document.getElementById("input-evaluador").value.trim();
+            let obsVal = document.getElementById("input-observaciones").value.trim();
+            let agreVal = document.getElementById("input-compromisos").value.trim();
+
             let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
             
-            // Guardar registro consolidado (Roadmap + Evaluación GL)
-            history.unshift({
+            let newRecord = {
+                id: Date.now(),
                 date: dateStr,
                 gmbPercent: currentGMB,
                 total: total,
                 percent: pct,
                 label: perfLabel,
-                emoji: emoji
-            });
+                emoji: emoji,
+                evaluator: evaluatorVal,
+                observations: obsVal,
+                agreements: agreVal,
+                evalDataSnapshot: [...evalData],
+                roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
+            };
 
+            history.unshift(newRecord);
             localStorage.setItem(`hist_${currentGL}`, JSON.stringify(history));
 
-            // Reiniciar campos de evaluación GL
-            evalData = [0,0,0,0,0];
-            updateEvalUI();
+            resetFormInputs();
             loadHistory();
+            updateLatestCommentsDisplay();
             
-            alert(`Evaluación semanal registrada para ${currentGL}:\n- Avance Roadmap GMB: ${currentGMB}%\n- Desempeño GL: ${pct}% (${perfLabel} ${emoji})`);
+            alert(`Evaluación registrada correctamente para ${currentGL}.`);
         }
 
-        // --- CARGAR HISTORIAL Y TENDENCIA HACIA EL 100% DE NOVIEMBRE ---
+        function resetFormInputs() {
+            evalData = [0,0,0,0,0];
+            document.getElementById("input-evaluador").value = "";
+            document.getElementById("input-observaciones").value = "";
+            document.getElementById("input-compromisos").value = "";
+            updateEvalUI();
+        }
+
+        // --- ELIMINAR EVALUACIÓN ---
+        function deleteEvaluation(id) {
+            if(!confirm("¿Deseas eliminar esta evaluación? Esta acción afectará el promedio y el historial registrado.")) {
+                return;
+            }
+
+            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
+            history = history.filter(item => item.id !== id);
+            localStorage.setItem(`hist_${currentGL}`, JSON.stringify(history));
+
+            if(viewingEvaluationId === id) {
+                resetToNewEvaluation();
+            } else {
+                loadHistory();
+                updateLatestCommentsDisplay();
+            }
+        }
+
+        // --- CARGAR / CONSULTAR EVALUACIÓN PASADA ---
+        function viewEvaluation(id) {
+            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
+            let rec = history.find(item => item.id === id);
+            if(!rec) return;
+
+            viewingEvaluationId = id;
+
+            // Mostrar Banner
+            document.getElementById("view-mode-banner").classList.remove("hidden");
+            document.getElementById("view-mode-date").textContent = rec.date;
+
+            // Cargar datos guardados
+            if(rec.evalDataSnapshot) evalData = [...rec.evalDataSnapshot];
+            if(rec.roadmapSnapshot) {
+                roadmapData = JSON.parse(JSON.stringify(rec.roadmapSnapshot));
+                updateRoadmapUI();
+            }
+            updateEvalUI();
+
+            // Cargar Comentarios en formulario y panel
+            document.getElementById("input-evaluador").value = rec.evaluator || "";
+            document.getElementById("input-observaciones").value = rec.observations || "";
+            document.getElementById("input-compromisos").value = rec.agreements || "";
+
+            document.getElementById("disp-evaluador").textContent = rec.evaluator || "Sin registro";
+            document.getElementById("disp-observaciones").textContent = rec.observations || "Sin observaciones";
+            document.getElementById("disp-compromisos").textContent = rec.agreements || "Sin acuerdos";
+
+            loadHistory();
+        }
+
+        function resetToNewEvaluation() {
+            viewingEvaluationId = null;
+            document.getElementById("view-mode-banner").classList.add("hidden");
+            resetFormInputs();
+            
+            let savedRoadmap = localStorage.getItem(`roadmap_${currentGL}`);
+            if(savedRoadmap) {
+                roadmapData = JSON.parse(savedRoadmap);
+            }
+            updateRoadmapUI();
+            loadHistory();
+            updateLatestCommentsDisplay();
+        }
+
+        function updateLatestCommentsDisplay() {
+            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
+            if(history.length > 0) {
+                let latest = history[0];
+                document.getElementById("disp-evaluador").textContent = latest.evaluator || "Sin registro";
+                document.getElementById("disp-observaciones").textContent = latest.observations || "Sin observaciones";
+                document.getElementById("disp-compromisos").textContent = latest.agreements || "Sin acuerdos";
+            } else {
+                document.getElementById("disp-evaluador").textContent = "Sin registro previo";
+                document.getElementById("disp-observaciones").textContent = "Sin observaciones registradas";
+                document.getElementById("disp-compromisos").textContent = "Sin acuerdos registrados";
+            }
+        }
+
+        // --- CARGAR HISTORIAL Y CADA ACCIÓN ---
         function loadHistory() {
             const tbody = document.getElementById("history-body");
             let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
@@ -491,20 +627,26 @@
             tbody.innerHTML = "";
             history.forEach((h) => {
                 let tr = document.createElement("tr");
-                tr.className = "border-b border-gray-100 hover:bg-slate-50 text-xs";
+                let isSelected = viewingEvaluationId === h.id;
+                tr.className = `border-b border-gray-100 hover:bg-slate-50 text-xs transition cursor-pointer ${isSelected ? 'row-selected' : ''}`;
                 
                 let evalColor = h.percent >= 80 ? "text-green-600" : (h.percent >= 60 ? "text-yellow-600" : "text-red-600");
-                let gmbColor = h.gmbPercent >= 80 ? "text-green-600" : (h.gmbPercent >= 50 ? "text-yellow-600" : "text-slate-700");
 
                 tr.innerHTML = `
-                    <td class="py-2 text-left pl-2 font-medium text-gray-600">${h.date}</td>
-                    <td class="py-2 font-bold ${gmbColor}">${h.gmbPercent}%</td>
-                    <td class="py-2 font-semibold">${h.total}/15 (${h.percent}%)</td>
-                    <td class="py-2">${h.emoji || ''} <span class="${evalColor} font-bold">${h.label || ''}</span></td>
-                    <td class="py-2 pr-2">
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex">
-                            <div class="bg-emerald-500 h-2.5 rounded-full" style="width: ${h.gmbPercent}%"></div>
-                        </div>
+                    <td class="py-2 text-left pl-2 font-medium text-gray-600" onclick="viewEvaluation(${h.id})">
+                        ${h.date}
+                        ${h.evaluator ? `<span class="block text-[10px] text-gray-400 truncate max-w-[100px]">${h.evaluator}</span>` : ''}
+                    </td>
+                    <td class="py-2 font-bold" onclick="viewEvaluation(${h.id})">${h.gmbPercent}%</td>
+                    <td class="py-2 font-semibold" onclick="viewEvaluation(${h.id})">${h.total}/15 (${h.percent}%)</td>
+                    <td class="py-2" onclick="viewEvaluation(${h.id})">${h.emoji || ''} <span class="${evalColor} font-bold">${h.label || ''}</span></td>
+                    <td class="py-2 text-center">
+                        <button onclick="viewEvaluation(${h.id})" class="text-blue-600 hover:text-blue-800 p-1 mr-1" title="Ver campos de esta evaluación">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="deleteEvaluation(${h.id})" class="text-red-500 hover:text-red-700 p-1" title="Eliminar evaluación">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
