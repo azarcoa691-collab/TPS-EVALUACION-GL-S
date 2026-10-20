@@ -34,7 +34,7 @@
     <header class="bg-navy text-white p-4 flex justify-between items-center shadow-md sticky top-0 z-50">
         <h1 class="text-xl font-bold uppercase tracking-wider">Perfil y Seguimiento de Entrenamiento - FMDS</h1>
         <select id="gl-selector" class="bg-white text-navy px-4 py-2 rounded font-semibold border-none outline-none cursor-pointer" onchange="changeGL()">
-            <!-- Las opciones se llenan con JS -->
+            <!-- Opciones generadas dinámicamente -->
         </select>
     </header>
 
@@ -149,7 +149,7 @@
             </div>
         </div>
 
-        <!-- 5. EVALUACIÓN Y 6. TENDENCIA -->
+        <!-- 5. EVALUACIÓN Y 6. HISTORIAL Y TENDENCIA -->
         <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             
             <!-- 5. EVALUACIÓN DEL GL -->
@@ -182,27 +182,28 @@
                         </tfoot>
                     </table>
                     <button onclick="saveEvaluation()" class="w-full mt-4 bg-navy text-white py-2 rounded hover:bg-slate-800 transition font-bold shadow-md">
-                        <i class="fas fa-save mr-2"></i> Guardar Evaluación
+                        <i class="fas fa-save mr-2"></i> Guardar Evaluación Semanal
                     </button>
                 </div>
             </div>
 
-            <!-- 6. HISTORIAL DE REVISIONES -->
+            <!-- 6. HISTORIAL Y TENDENCIA DE MEJORA -->
             <div class="bg-white border rounded-lg shadow-sm relative">
-                <div class="card-header absolute top-0 left-0">6. HISTORIAL Y TENDENCIA DE MEJORA</div>
+                <div class="card-header absolute top-0 left-0">6. HISTORIAL Y TENDENCIA DE MEJORA (OBJETIVO NOVIEMBRE: 100%)</div>
                 <div class="p-6 pt-12">
-                    <div class="overflow-y-auto max-h-[300px]">
-                        <table class="w-full text-sm text-center">
-                            <thead class="sticky top-0 bg-white shadow-sm">
-                                <tr class="text-xs text-gray-500 border-b">
-                                    <th class="py-2">FECHA</th>
-                                    <th class="py-2">PUNTOS</th>
-                                    <th class="py-2">PORCENTAJE</th>
+                    <div class="overflow-y-auto max-h-[350px]">
+                        <table class="w-full text-sm text-center border-collapse">
+                            <thead class="sticky top-0 bg-white shadow-sm border-b">
+                                <tr class="text-xs text-gray-500">
+                                    <th class="py-2 text-left pl-2">FECHA</th>
+                                    <th class="py-2">AVANCE GMB</th>
+                                    <th class="py-2">EVAL. GL</th>
                                     <th class="py-2">NIVEL</th>
+                                    <th class="py-2 pr-2">TENDENCIA META (100%)</th>
                                 </tr>
                             </thead>
                             <tbody id="history-body">
-                                <tr><td colspan="4" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>
+                                <tr><td colspan="5" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -263,7 +264,6 @@
             loadGL();
         }
 
-        // --- CAMBIO DE GROUP LEADER ---
         function changeGL() {
             currentGL = document.getElementById("gl-selector").value;
             loadGL();
@@ -304,7 +304,7 @@
             const tbody = document.getElementById("roadmap-body");
             tbody.innerHTML = "";
             
-            roadmapTemas.forEach((tema, index) => {
+            roadmapTemas.forEach((tema) => {
                 roadmapData[tema.id] = [0,0,0,0];
                 
                 let tr = document.createElement("tr");
@@ -348,7 +348,7 @@
                 let rowSum = 0;
                 roadmapData[tema.id].forEach((val, i) => {
                     let dot = document.getElementById(`dot-${tema.id}-${i}`);
-                    dot.className = `status-dot status-${val} mx-auto`;
+                    if(dot) dot.className = `status-dot status-${val} mx-auto`;
                     
                     if(val === 1) rowSum += 25;
                     if(val === 2) rowSum += 50;
@@ -356,17 +356,20 @@
                 });
                 
                 let pct = Math.round(rowSum / 4);
-                document.getElementById(`bar-${tema.id}`).style.width = `${pct}%`;
-                document.getElementById(`pct-${tema.id}`).textContent = `${pct}%`;
+                let bar = document.getElementById(`bar-${tema.id}`);
+                let pctText = document.getElementById(`pct-${tema.id}`);
+                if(bar) bar.style.width = `${pct}%`;
+                if(pctText) pctText.textContent = `${pct}%`;
                 totalPctSum += pct;
             });
 
             let generalGMB = Math.round(totalPctSum / roadmapTemas.length);
             document.getElementById("text-gmb").textContent = `${generalGMB}%`;
             document.getElementById("chart-gmb").style.background = `conic-gradient(#10b981 ${generalGMB}%, #e2e8f0 0%)`;
+            return generalGMB;
         }
 
-        // --- EVALUACIÓN (ÚLTIMA REVISIÓN Y EMOJIS) ---
+        // --- EVALUACIÓN (SECCIÓN 5) ---
         function renderEvaluacion() {
             const tbody = document.getElementById("eval-body");
             tbody.innerHTML = "";
@@ -407,7 +410,6 @@
             let pct = Math.round((total / 15) * 100);
             document.getElementById("eval-total").textContent = `${total} / 15`;
             
-            // Lógica exacta con Emojis
             let perfLabel = "NO EVALUADO";
             let emoji = "😐";
             if (answered > 0) {
@@ -422,7 +424,6 @@
             let pctEl = document.getElementById("eval-percent");
             pctEl.textContent = `${pct}%`;
             
-            // Estilos dinámicos según nivel
             if (perfLabel === "EXCELENTE") {
                 pctEl.className = "text-2xl font-bold text-green-600";
                 document.getElementById("eval-label").className = "font-bold text-sm text-green-600";
@@ -438,12 +439,14 @@
             }
         }
 
+        // --- GUARDAR EVALUACIÓN Y REGISTRO COMPLETO EN EL HISTORIAL ---
         function saveEvaluation() {
             if(evalData.includes(0)) {
                 alert("Por favor, califica todos los 5 elementos (selecciona de 1 a 3) antes de guardar.");
                 return;
             }
 
+            let currentGMB = updateRoadmapUI(); // Obtener avance del Roadmap actual
             let total = evalData.reduce((a, b) => a + b, 0);
             let pct = Math.round((total / 15) * 100);
             let dateStr = new Date().toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'});
@@ -454,38 +457,55 @@
             else if (pct >= 60) { perfLabel = "REGULAR"; emoji = "🙂"; }
 
             let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
-            history.unshift({ date: dateStr, total: total, percent: pct, label: perfLabel, emoji: emoji });
+            
+            // Guardar registro consolidado (Roadmap + Evaluación GL)
+            history.unshift({
+                date: dateStr,
+                gmbPercent: currentGMB,
+                total: total,
+                percent: pct,
+                label: perfLabel,
+                emoji: emoji
+            });
+
             localStorage.setItem(`hist_${currentGL}`, JSON.stringify(history));
 
-            // Limpiar formulario tras guardar
+            // Reiniciar campos de evaluación GL
             evalData = [0,0,0,0,0];
             updateEvalUI();
             loadHistory();
             
-            alert(`Evaluación de ${pct}% (${perfLabel} ${emoji}) guardada correctamente para ${currentGL}.`);
+            alert(`Evaluación semanal registrada para ${currentGL}:\n- Avance Roadmap GMB: ${currentGMB}%\n- Desempeño GL: ${pct}% (${perfLabel} ${emoji})`);
         }
 
+        // --- CARGAR HISTORIAL Y TENDENCIA HACIA EL 100% DE NOVIEMBRE ---
         function loadHistory() {
             const tbody = document.getElementById("history-body");
             let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
             
             if(history.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = "";
-            history.forEach(h => {
+            history.forEach((h) => {
                 let tr = document.createElement("tr");
-                tr.className = "border-b border-gray-100 hover:bg-slate-50";
+                tr.className = "border-b border-gray-100 hover:bg-slate-50 text-xs";
                 
-                let colorClass = h.percent >= 80 ? "text-green-600" : (h.percent >= 60 ? "text-yellow-600" : "text-red-600");
+                let evalColor = h.percent >= 80 ? "text-green-600" : (h.percent >= 60 ? "text-yellow-600" : "text-red-600");
+                let gmbColor = h.gmbPercent >= 80 ? "text-green-600" : (h.gmbPercent >= 50 ? "text-yellow-600" : "text-slate-700");
 
                 tr.innerHTML = `
-                    <td class="py-2 text-gray-600 font-medium">${h.date}</td>
-                    <td class="py-2">${h.total} / 15</td>
-                    <td class="py-2 font-bold ${colorClass}">${h.percent}%</td>
-                    <td class="py-2 font-semibold text-xs">${h.emoji || ''} ${h.label || ''}</td>
+                    <td class="py-2 text-left pl-2 font-medium text-gray-600">${h.date}</td>
+                    <td class="py-2 font-bold ${gmbColor}">${h.gmbPercent}%</td>
+                    <td class="py-2 font-semibold">${h.total}/15 (${h.percent}%)</td>
+                    <td class="py-2">${h.emoji || ''} <span class="${evalColor} font-bold">${h.label || ''}</span></td>
+                    <td class="py-2 pr-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden flex">
+                            <div class="bg-emerald-500 h-2.5 rounded-full" style="width: ${h.gmbPercent}%"></div>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
