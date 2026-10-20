@@ -173,7 +173,11 @@
                             </tr>
                             <tr>
                                 <td class="py-2 text-right pr-4 uppercase text-gray-500">Nivel de Desempeño:</td>
-                                <td class="py-2 text-center text-2xl font-bold text-navy" id="eval-percent">0%</td>
+                                <td class="py-2 text-center">
+                                    <div id="eval-label" class="font-bold text-sm text-gray-400">NO EVALUADO</div>
+                                    <div id="eval-emoji" class="text-3xl my-1">😐</div>
+                                    <div id="eval-percent" class="text-2xl font-bold text-gray-400">0%</div>
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -194,10 +198,11 @@
                                     <th class="py-2">FECHA</th>
                                     <th class="py-2">PUNTOS</th>
                                     <th class="py-2">PORCENTAJE</th>
+                                    <th class="py-2">NIVEL</th>
                                 </tr>
                             </thead>
                             <tbody id="history-body">
-                                <tr><td colspan="3" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>
+                                <tr><td colspan="4" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -278,12 +283,11 @@
             imgEl.src = gl.defaultPhoto;
             fallbackEl.textContent = gl.name;
 
-            // Cargar datos de Roadmap y Evaluaciones guardados en LocalStorage
+            // Cargar datos de Roadmap
             let savedRoadmap = localStorage.getItem(`roadmap_${currentGL}`);
             if(savedRoadmap) {
                 roadmapData = JSON.parse(savedRoadmap);
             } else {
-                // Inicializar en 0
                 roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
             }
 
@@ -301,7 +305,7 @@
             tbody.innerHTML = "";
             
             roadmapTemas.forEach((tema, index) => {
-                roadmapData[tema.id] = [0,0,0,0]; // Estado inicial: 4 columnas en 0
+                roadmapData[tema.id] = [0,0,0,0];
                 
                 let tr = document.createElement("tr");
                 tr.className = "border-b hover:bg-slate-50";
@@ -330,7 +334,6 @@
         }
 
         function toggleDot(temaId, colIndex) {
-            // Ciclo: 0 -> 1 -> 2 -> 3 -> 0
             let currentVal = roadmapData[temaId][colIndex];
             roadmapData[temaId][colIndex] = currentVal === 3 ? 0 : currentVal + 1;
             
@@ -347,26 +350,23 @@
                     let dot = document.getElementById(`dot-${tema.id}-${i}`);
                     dot.className = `status-dot status-${val} mx-auto`;
                     
-                    // Valores para porcentaje: 0=0%, 1=25%, 2=50%, 3=100%
                     if(val === 1) rowSum += 25;
                     if(val === 2) rowSum += 50;
                     if(val === 3) rowSum += 100;
                 });
                 
-                // Promedio de las 4 columnas
                 let pct = Math.round(rowSum / 4);
                 document.getElementById(`bar-${tema.id}`).style.width = `${pct}%`;
                 document.getElementById(`pct-${tema.id}`).textContent = `${pct}%`;
                 totalPctSum += pct;
             });
 
-            // Actualizar el Resumen General (Dona 1)
             let generalGMB = Math.round(totalPctSum / roadmapTemas.length);
             document.getElementById("text-gmb").textContent = `${generalGMB}%`;
             document.getElementById("chart-gmb").style.background = `conic-gradient(#10b981 ${generalGMB}%, #e2e8f0 0%)`;
         }
 
-        // --- EVALUACIÓN (ÚLTIMA REVISIÓN) ---
+        // --- EVALUACIÓN (ÚLTIMA REVISIÓN Y EMOJIS) ---
         function renderEvaluacion() {
             const tbody = document.getElementById("eval-body");
             tbody.innerHTML = "";
@@ -392,6 +392,7 @@
 
         function updateEvalUI() {
             let total = 0;
+            let answered = 0;
             evalCriterios.forEach((_, index) => {
                 let btns = document.querySelectorAll(`.eval-btn-${index}`);
                 btns.forEach(b => b.classList.remove("selected"));
@@ -399,19 +400,42 @@
                 if(evalData[index] > 0) {
                     btns[evalData[index]-1].classList.add("selected");
                     total += evalData[index];
+                    answered++;
                 }
             });
 
             let pct = Math.round((total / 15) * 100);
             document.getElementById("eval-total").textContent = `${total} / 15`;
             
+            // Lógica exacta con Emojis
+            let perfLabel = "NO EVALUADO";
+            let emoji = "😐";
+            if (answered > 0) {
+                if (pct >= 80) { perfLabel = "EXCELENTE"; emoji = "😀"; }
+                else if (pct >= 60) { perfLabel = "REGULAR"; emoji = "🙂"; }
+                else { perfLabel = "INSUFICIENTE"; emoji = "😧"; }
+            }
+
+            document.getElementById("eval-label").textContent = perfLabel;
+            document.getElementById("eval-emoji").textContent = emoji;
+
             let pctEl = document.getElementById("eval-percent");
             pctEl.textContent = `${pct}%`;
             
-            // Colores según porcentaje
-            if(pct >= 80) pctEl.className = "py-2 text-center text-2xl font-bold text-green-600";
-            else if(pct >= 60) pctEl.className = "py-2 text-center text-2xl font-bold text-yellow-600";
-            else pctEl.className = "py-2 text-center text-2xl font-bold text-red-600";
+            // Estilos dinámicos según nivel
+            if (perfLabel === "EXCELENTE") {
+                pctEl.className = "text-2xl font-bold text-green-600";
+                document.getElementById("eval-label").className = "font-bold text-sm text-green-600";
+            } else if (perfLabel === "REGULAR") {
+                pctEl.className = "text-2xl font-bold text-yellow-600";
+                document.getElementById("eval-label").className = "font-bold text-sm text-yellow-600";
+            } else if (perfLabel === "INSUFICIENTE") {
+                pctEl.className = "text-2xl font-bold text-red-600";
+                document.getElementById("eval-label").className = "font-bold text-sm text-red-600";
+            } else {
+                pctEl.className = "text-2xl font-bold text-gray-400";
+                document.getElementById("eval-label").className = "font-bold text-sm text-gray-400";
+            }
         }
 
         function saveEvaluation() {
@@ -424,16 +448,21 @@
             let pct = Math.round((total / 15) * 100);
             let dateStr = new Date().toLocaleDateString('es-MX', {day: '2-digit', month: 'short', year: 'numeric'});
 
+            let perfLabel = "INSUFICIENTE";
+            let emoji = "😧";
+            if (pct >= 80) { perfLabel = "EXCELENTE"; emoji = "😀"; }
+            else if (pct >= 60) { perfLabel = "REGULAR"; emoji = "🙂"; }
+
             let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
-            history.unshift({ date: dateStr, total: total, percent: pct }); // Agregar al inicio
+            history.unshift({ date: dateStr, total: total, percent: pct, label: perfLabel, emoji: emoji });
             localStorage.setItem(`hist_${currentGL}`, JSON.stringify(history));
 
-            // Limpiar para nueva evaluación
+            // Limpiar formulario tras guardar
             evalData = [0,0,0,0,0];
             updateEvalUI();
             loadHistory();
             
-            alert(`Evaluación de ${pct}% guardada correctamente para ${currentGL}.`);
+            alert(`Evaluación de ${pct}% (${perfLabel} ${emoji}) guardada correctamente para ${currentGL}.`);
         }
 
         function loadHistory() {
@@ -441,7 +470,7 @@
             let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
             
             if(history.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-gray-400 italic">No hay evaluaciones registradas</td></tr>`;
                 return;
             }
 
@@ -456,12 +485,12 @@
                     <td class="py-2 text-gray-600 font-medium">${h.date}</td>
                     <td class="py-2">${h.total} / 15</td>
                     <td class="py-2 font-bold ${colorClass}">${h.percent}%</td>
+                    <td class="py-2 font-semibold text-xs">${h.emoji || ''} ${h.label || ''}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Arrancar la App
         window.onload = init;
     </script>
 </body>
