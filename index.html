@@ -9,7 +9,7 @@
     <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase SDKs (Compatibles v9) -->
+    <!-- Firebase SDKs (Compatibles con Web Modular) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -314,16 +314,16 @@
     </div>
 
     <script>
-        // --- TUS CREDENCIALES REALES DE FIREBASE ---
+        // --- CONFIGURACIÓN DE FIREBASE ---
+        // Reemplaza estos datos con los de tu consola de Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyCwDFW-t1Fe4XdLCJrP4xiFnbWXbKJU24I",
-            authDomain: "tps-evaluacion-gl-s.firebaseapp.com",
-            databaseURL: "https://tps-evaluacion-gl-s-default-rtdb.firebaseio.com", // Asegúrate de incluir la URL de tu Realtime Database si aplica
-            projectId: "tps-evaluacion-gl-s",
-            storageBucket: "tps-evaluacion-gl-s.firebasestorage.app",
-            messagingSenderId: "702193525121",
-            appId: "1:702193525121:web:55b2261d6db935d87c4880",
-            measurementId: "G-B0WF5YYERV"
+            apiKey: "TU_API_KEY",
+            authDomain: "tu-proyecto.firebaseapp.com",
+            databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
+            projectId: "tu-proyecto",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
         };
 
         // Inicializar Firebase
@@ -398,14 +398,17 @@
             imgEl.src = gl.defaultPhoto;
             fallbackEl.textContent = gl.name;
 
+            // Limpiar listener anterior si existe
             if(dbRef) dbRef.off();
 
+            // Referencia segura en Firebase (reemplazando espacios por guiones bajos)
             const safeKey = currentGL.replace(/\s+/g, '_');
             dbRef = db.ref(`evaluaciones_fmds/${safeKey}`);
 
             dbRef.on('value', (snapshot) => {
                 const data = snapshot.val() || {};
                 
+                // Cargar Roadmap guardado o reiniciar
                 if(data.roadmap) {
                     roadmapData = data.roadmap;
                 } else {
@@ -415,7 +418,9 @@
 
                 updateRoadmapUI();
                 
+                // Cargar Historial
                 const history = data.history ? Object.values(data.history) : [];
+                // Ordenar por ID descendiente (más reciente primero)
                 history.sort((a, b) => b.id - a.id);
                 renderHistoryList(history);
                 
@@ -465,6 +470,7 @@
             let currentVal = roadmapData[temaId][colIndex];
             roadmapData[temaId][colIndex] = currentVal === 3 ? 0 : currentVal + 1;
             
+            // Sincronizar roadmap directamente con Firebase
             dbRef.child('roadmap').set(roadmapData);
             updateRoadmapUI();
         }
@@ -603,6 +609,7 @@
                 roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
             };
 
+            // Guardar en Firebase (crea un nodo con la fecha/ID exacto)
             dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
                 resetFormInputs();
                 resetToNewEvaluation();
@@ -662,6 +669,7 @@
             document.getElementById("view-mode-banner").classList.add("hidden");
             resetFormInputs();
             
+            // Recargar roadmap actual desde Firebase
             dbRef.child('roadmap').once('value', (snapshot) => {
                 if(snapshot.exists()) {
                     roadmapData = snapshot.val();
