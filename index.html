@@ -22,19 +22,20 @@
         .status-3 { background-color: #10b981; border-color: #047857; } /* Verde - 100% */
         
         /* Gráficas de Dona */
-        .donut-chart { position: relative; width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#10b981 0%, #e2e8f0 0%); display: flex; align-items: center; justify-content: center; margin: 0 auto; }
-        .donut-inner { width: 90px; height: 90px; border-radius: 50%; background-color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0 0 5px rgba(0,0,0,0.1);}
+        .donut-chart { position: relative; width: 110px; height: 110px; border-radius: 50%; background: conic-gradient(#10b981 0%, #e2e8f0 0%); display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        .donut-inner { width: 82px; height: 82px; border-radius: 50%; background-color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0 0 5px rgba(0,0,0,0.1);}
         
         /* Botones de Evaluación */
-        .eval-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold;}
+        .eval-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold;}
         .eval-btn.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .row-selected { background-color: #eff6ff !important; border-left: 4px solid #3b82f6; }
 
-        /* REGLAS ESPECIALES PARA IMPRESIÓN Y PDF PERFECTO */
+        /* CONFIGURACIÓN EXACTA PARA HOJA 11" x 17" (TABLOIDE / DOBLE CARTA HORIZONTAL) */
         @page {
-            size: letter landscape;
-            margin: 8mm;
+            size: 17in 11in; /* 17 pulgadas de ancho x 11 pulgadas de alto */
+            margin: 6mm;
         }
+
         @media print {
             header, #view-mode-banner, .no-print, button { display: none !important; }
             body { 
@@ -43,6 +44,7 @@
                 margin: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                font-size: 10.5px !important;
             }
             #pdf-content { 
                 box-shadow: none !important; 
@@ -51,6 +53,9 @@
                 width: 100% !important; 
                 max-width: 100% !important; 
                 background: white !important;
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 10px !important;
             }
             .page-break-avoid {
                 page-break-inside: avoid !important;
@@ -60,6 +65,11 @@
                 border: none !important;
                 resize: none !important;
                 background: transparent !important;
+                padding: 0 !important;
+            }
+            .overflow-y-auto {
+                max-height: none !important;
+                overflow: visible !important;
             }
         }
     </style>
@@ -71,7 +81,7 @@
         <h1 class="text-xl font-bold uppercase tracking-wider">Perfil y Seguimiento de Entrenamiento - FMDS</h1>
         <div class="flex items-center gap-3">
             <button onclick="exportToPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-xs font-bold transition shadow flex items-center gap-2">
-                <i class="fas fa-file-pdf text-sm"></i> Exportar PDF
+                <i class="fas fa-file-pdf text-sm"></i> Exportar PDF (11" x 17")
             </button>
             <select id="gl-selector" class="bg-white text-navy px-4 py-2 rounded font-semibold border-none outline-none cursor-pointer text-sm" onchange="changeGL()">
                 <!-- Generado dinámicamente -->
@@ -122,7 +132,7 @@
         <!-- 2. OBJETIVO DEL ENTRENAMIENTO -->
         <div class="bg-white border rounded-lg shadow-sm relative page-break-avoid">
             <div class="card-header absolute top-0 left-0">2. OBJETIVO DEL ENTRENAMIENTO</div>
-            <div class="p-6 pt-12 text-gray-600 text-sm italic text-justify leading-relaxed">
+            <div class="p-6 pt-12 text-gray-600 text-xs sm:text-sm italic text-justify leading-relaxed">
                 "Desarrollar group leaders capaces de liderar equipos de alto desempeño mediante la aplicación efectiva de Group Manufacturing Board, Change Point, TBP y PDCA, fortaleciendo sus conocimientos, habilidades y liderazgo para impulsar la colaboración, la solución de problemas y la mejora continua, contribuyendo al logro de los objetivos de la organización."
             </div>
         </div>
@@ -130,40 +140,40 @@
         <!-- 3. RESUMEN GENERAL -->
         <div class="bg-white border rounded-lg shadow-sm md:col-span-3 relative mt-2 page-break-avoid">
             <div class="card-header absolute top-0 left-0">3. RESUMEN GENERAL DEL ENTRENAMIENTO (PROCESO POR COMPETENCIA)</div>
-            <div class="p-6 pt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            <div class="p-5 pt-11 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
-                    <h3 class="text-xs font-bold text-gray-600 mb-4 h-8 uppercase">Group Manufacturing Board</h3>
+                    <h3 class="text-xs font-bold text-gray-600 mb-2 uppercase">Group Manufacturing Board</h3>
                     <div id="chart-gmb" class="donut-chart" style="background: conic-gradient(#10b981 0%, #e2e8f0 0%);">
                         <div class="donut-inner">
-                            <span class="text-xs text-gray-500 font-bold">AVANCE</span>
-                            <span id="text-gmb" class="text-xl font-bold text-navy">0%</span>
+                            <span class="text-[10px] text-gray-500 font-bold">AVANCE</span>
+                            <span id="text-gmb" class="text-lg font-bold text-navy">0%</span>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-gray-600 mb-4 h-8 uppercase">Problem Solving (TBP)</h3>
+                    <h3 class="text-xs font-bold text-gray-600 mb-2 uppercase">Problem Solving (TBP)</h3>
                     <div id="chart-tbp" class="donut-chart" style="background: conic-gradient(#e2e8f0 100%, #e2e8f0 0%);">
                         <div class="donut-inner">
-                            <span class="text-xs text-gray-500 font-bold">AVANCE</span>
-                            <span class="text-xl font-bold text-navy">0%</span>
+                            <span class="text-[10px] text-gray-500 font-bold">AVANCE</span>
+                            <span class="text-lg font-bold text-navy">0%</span>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-gray-600 mb-4 h-8 uppercase">PDCA</h3>
+                    <h3 class="text-xs font-bold text-gray-600 mb-2 uppercase">PDCA</h3>
                     <div id="chart-pdca" class="donut-chart" style="background: conic-gradient(#e2e8f0 100%, #e2e8f0 0%);">
                         <div class="donut-inner">
-                            <span class="text-xs text-gray-500 font-bold">AVANCE</span>
-                            <span class="text-xl font-bold text-navy">0%</span>
+                            <span class="text-[10px] text-gray-500 font-bold">AVANCE</span>
+                            <span class="text-lg font-bold text-navy">0%</span>
                         </div>
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-xs font-bold text-gray-600 mb-4 h-8 uppercase">Change Point</h3>
+                    <h3 class="text-xs font-bold text-gray-600 mb-2 uppercase">Change Point</h3>
                     <div id="chart-cp" class="donut-chart" style="background: conic-gradient(#e2e8f0 100%, #e2e8f0 0%);">
                         <div class="donut-inner">
-                            <span class="text-xs text-gray-500 font-bold">AVANCE</span>
-                            <span class="text-xl font-bold text-navy">0%</span>
+                            <span class="text-[10px] text-gray-500 font-bold">AVANCE</span>
+                            <span class="text-lg font-bold text-navy">0%</span>
                         </div>
                     </div>
                 </div>
@@ -171,9 +181,9 @@
         </div>
 
         <!-- 4. ROADMAP DE APRENDIZAJE -->
-        <div class="bg-white border rounded-lg shadow-sm md:col-span-3 relative mt-2 overflow-x-auto page-break-avoid">
+        <div class="bg-white border rounded-lg shadow-sm md:col-span-3 relative mt-2 page-break-avoid">
             <div class="card-header absolute top-0 left-0">4. ROADMAP DE APRENDIZAJE - GMB</div>
-            <div class="p-6 pt-12 min-w-[800px]">
+            <div class="p-6 pt-12">
                 <table class="w-full text-center border-collapse">
                     <thead>
                         <tr class="text-xs text-gray-500 uppercase border-b-2">
@@ -190,11 +200,11 @@
                     </tbody>
                 </table>
                 <!-- Leyenda -->
-                <div class="flex justify-between items-center mt-6 pt-4 border-t text-[10px] text-gray-600 font-medium">
-                    <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-[#10b981] mr-2"></div> ESTANDARIZADO - 100% (2 Meses consecutivos)</div>
-                    <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-[#f59e0b] mr-2"></div> EN OPERACIÓN - 50% (Con registro y evidencia)</div>
-                    <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-[#ef4444] mr-2"></div> INSTALADO - 25% (Formatos sin uso)</div>
-                    <div class="flex items-center"><div class="w-4 h-4 rounded-full bg-[#e2e8f0] mr-2 border border-gray-300"></div> NO INICIADO - 0% (Sin documentación)</div>
+                <div class="flex justify-between items-center mt-4 pt-3 border-t text-[10px] text-gray-600 font-medium">
+                    <div class="flex items-center"><div class="w-3.5 h-3.5 rounded-full bg-[#10b981] mr-1.5"></div> ESTANDARIZADO - 100% (2 Meses consecutivos)</div>
+                    <div class="flex items-center"><div class="w-3.5 h-3.5 rounded-full bg-[#f59e0b] mr-1.5"></div> EN OPERACIÓN - 50% (Con registro y evidencia)</div>
+                    <div class="flex items-center"><div class="w-3.5 h-3.5 rounded-full bg-[#ef4444] mr-1.5"></div> INSTALADO - 25% (Formatos sin uso)</div>
+                    <div class="flex items-center"><div class="w-3.5 h-3.5 rounded-full bg-[#e2e8f0] mr-1.5 border border-gray-300"></div> NO INICIADO - 0% (Sin documentación)</div>
                 </div>
             </div>
         </div>
@@ -227,7 +237,7 @@
             <div class="bg-white border rounded-lg shadow-sm relative page-break-avoid">
                 <div class="card-header absolute top-0 left-0">5. EVALUACIÓN DEL GL (REVISIÓN)</div>
                 <div class="p-6 pt-12">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-xs sm:text-sm">
                         <thead>
                             <tr class="border-b">
                                 <th class="text-left pb-2">ELEMENTO EVALUADO</th>
@@ -239,33 +249,33 @@
                         </tbody>
                         <tfoot>
                             <tr class="border-t-2 border-gray-800 font-bold">
-                                <td class="py-3 text-right pr-4 uppercase">Total Obtenido:</td>
-                                <td class="py-3 text-center text-lg text-blue-600" id="eval-total">0 / 15</td>
+                                <td class="py-2 text-right pr-4 uppercase">Total Obtenido:</td>
+                                <td class="py-2 text-center text-base text-blue-600" id="eval-total">0 / 15</td>
                             </tr>
                             <tr>
                                 <td class="py-2 text-right pr-4 uppercase text-gray-500">Nivel de Desempeño:</td>
                                 <td class="py-2 text-center">
-                                    <div id="eval-label" class="font-bold text-sm text-gray-400">NO EVALUADO</div>
-                                    <div id="eval-emoji" class="text-3xl my-1">😐</div>
-                                    <div id="eval-percent" class="text-2xl font-bold text-gray-400">0%</div>
+                                    <div id="eval-label" class="font-bold text-xs text-gray-400">NO EVALUADO</div>
+                                    <div id="eval-emoji" class="text-2xl my-0.5">😐</div>
+                                    <div id="eval-percent" class="text-xl font-bold text-gray-400">0%</div>
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
 
                     <!-- CAMPOS DE COMENTARIOS PARA LA EVALUACIÓN -->
-                    <div class="mt-6 border-t pt-4 space-y-3">
+                    <div class="mt-4 border-t pt-3 space-y-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Evaluador(es) / Coach:</label>
                             <input type="text" id="input-evaluador" placeholder="Ej. Gisela Espinoza / Arturo Hernandez" class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Hallazgos y Observaciones:</label>
-                            <textarea id="input-observaciones" rows="3" placeholder="Escribe las observaciones identificadas durante la revisión..." class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                            <textarea id="input-observaciones" rows="2" placeholder="Escribe las observaciones identificadas durante la revisión..." class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Compromisos y Acuerdos:</label>
-                            <textarea id="input-compromisos" rows="3" placeholder="1° Mantener actualizadas las gráficas... 2° Registrar evidencia..." class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                            <textarea id="input-compromisos" rows="2" placeholder="1° Mantener actualizadas las gráficas... 2° Registrar evidencia..." class="w-full text-xs p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                         </div>
                     </div>
 
@@ -279,10 +289,10 @@
             <div class="bg-white border rounded-lg shadow-sm relative page-break-avoid">
                 <div class="card-header absolute top-0 left-0">6. HISTORIAL Y TENDENCIA DE MEJORA (META NOVIEMBRE: 100%)</div>
                 <div class="p-6 pt-12">
-                    <div class="overflow-y-auto max-h-[500px]">
-                        <table class="w-full text-sm text-center border-collapse">
+                    <div class="overflow-y-auto max-h-[450px]">
+                        <table class="w-full text-xs text-center border-collapse">
                             <thead class="sticky top-0 bg-white shadow-sm border-b">
-                                <tr class="text-xs text-gray-500">
+                                <tr class="text-[11px] text-gray-500">
                                     <th class="py-2 text-left pl-2">FECHA</th>
                                     <th class="py-2">GMB</th>
                                     <th class="py-2">EVAL.</th>
@@ -459,8 +469,8 @@
                 let tr = document.createElement("tr");
                 tr.className = "border-b border-gray-100 hover:bg-slate-50";
                 tr.innerHTML = `
-                    <td class="py-3 text-gray-700">${index + 1}. ${crit}</td>
-                    <td class="py-3 flex justify-center gap-3">
+                    <td class="py-2.5 text-gray-700">${index + 1}. ${crit}</td>
+                    <td class="py-2.5 flex justify-center gap-3">
                         <button class="eval-btn eval-btn-${index}" onclick="setEval(${index}, 1)">1</button>
                         <button class="eval-btn eval-btn-${index}" onclick="setEval(${index}, 2)">2</button>
                         <button class="eval-btn eval-btn-${index}" onclick="setEval(${index}, 3)">3</button>
@@ -507,17 +517,17 @@
             pctEl.textContent = `${pct}%`;
             
             if (perfLabel === "EXCELENTE") {
-                pctEl.className = "text-2xl font-bold text-green-600";
-                document.getElementById("eval-label").className = "font-bold text-sm text-green-600";
+                pctEl.className = "text-xl font-bold text-green-600";
+                document.getElementById("eval-label").className = "font-bold text-xs text-green-600";
             } else if (perfLabel === "REGULAR") {
-                pctEl.className = "text-2xl font-bold text-yellow-600";
-                document.getElementById("eval-label").className = "font-bold text-sm text-yellow-600";
+                pctEl.className = "text-xl font-bold text-yellow-600";
+                document.getElementById("eval-label").className = "font-bold text-xs text-yellow-600";
             } else if (perfLabel === "INSUFICIENTE") {
-                pctEl.className = "text-2xl font-bold text-red-600";
-                document.getElementById("eval-label").className = "font-bold text-sm text-red-600";
+                pctEl.className = "text-xl font-bold text-red-600";
+                document.getElementById("eval-label").className = "font-bold text-xs text-red-600";
             } else {
-                pctEl.className = "text-2xl font-bold text-gray-400";
-                document.getElementById("eval-label").className = "font-bold text-sm text-gray-400";
+                pctEl.className = "text-xl font-bold text-gray-400";
+                document.getElementById("eval-label").className = "font-bold text-xs text-gray-400";
             }
         }
 
@@ -687,7 +697,7 @@
             });
         }
 
-        // --- EXPORTAR A PDF (NATIVO DEL NAVEGADOR) ---
+        // --- EXPORTAR A PDF (FORMATO 11" x 17") ---
         function exportToPDF() {
             window.print();
         }
