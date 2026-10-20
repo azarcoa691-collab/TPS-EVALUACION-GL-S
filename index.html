@@ -15,7 +15,7 @@
         .card-header { background-color: #1e293b; color: white; padding: 0.2rem 0.8rem; display: inline-block; font-size: 0.75rem; font-weight: bold; border-bottom-right-radius: 6px; border-top-left-radius: 4px;}
         
         /* Círculos de estado */
-        .status-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.2s; border: 2px solid #cbd5e1; }
+        .status-dot { width: 25px; height: 25px; border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.2s; border: 2px solid #cbd5e1; }
         .status-0 { background-color: #e2e8f0; } /* Gris - 0% */
         .status-1 { background-color: #ef4444; border-color: #b91c1c; } /* Rojo - 25% */
         .status-2 { background-color: #f59e0b; border-color: #b45309; } /* Naranja - 50% */
@@ -53,14 +53,18 @@
                 width: 100% !important; 
                 max-width: 100% !important; 
                 background: white !important;
-                gap: 6px !important;
-                zoom: 0.76; /* Ajusta la escala global para asegurar 1 página */
+                gap: 8px !important;
+                zoom: 0.74; /* Ajuste preciso para evitar salto de hoja */
             }
-            .p-6 { padding: 8px !important; }
-            .p-5 { padding: 6px !important; }
-            .p-4 { padding: 5px !important; }
-            .p-3 { padding: 4px !important; }
-            .pt-10, .pt-12, .pt-11 { padding-top: 20px !important; }
+            
+            /* Corrección del Empalme de Textos */
+            .p-4, .p-3 { 
+                padding: 8px !important; 
+            }
+            .pt-8, .pt-7 { 
+                padding-top: 30px !important; /* Fuerza el espacio exacto debajo del título oscuro */
+            }
+            
             .mt-6, .mt-4, .mt-2 { margin-top: 4px !important; }
             .mb-4, .mb-2 { margin-bottom: 2px !important; }
             
@@ -273,7 +277,7 @@
         </div>
 
         <!-- 6. RESUMEN GENERAL (DONAS DE COMPETENCIA AL FINAL DE LA PÁGINA) -->
-        <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid">
+        <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid mt-1">
             <div class="card-header absolute top-0 left-0">6. RESUMEN GENERAL DEL ENTRENAMIENTO (PROCESO POR COMPETENCIA)</div>
             <div class="p-3 pt-7 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
                 <div>
