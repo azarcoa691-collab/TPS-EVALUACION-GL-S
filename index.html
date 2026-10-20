@@ -8,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDKs (Compatibles v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
         body { background-color: #f3f4f6; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .bg-navy { background-color: #0b132b; }
@@ -15,7 +20,7 @@
         .card-header { background-color: #1e293b; color: white; padding: 0.2rem 0.8rem; display: inline-block; font-size: 0.75rem; font-weight: bold; border-bottom-right-radius: 6px; border-top-left-radius: 4px;}
         
         /* Círculos de estado */
-        .status-dot { width: 25px; height: 25px; border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.2s; border: 2px solid #cbd5e1; }
+        .status-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.2s; border: 2px solid #cbd5e1; }
         .status-0 { background-color: #e2e8f0; } /* Gris - 0% */
         .status-1 { background-color: #ef4444; border-color: #b91c1c; } /* Rojo - 25% */
         .status-2 { background-color: #f59e0b; border-color: #b45309; } /* Naranja - 50% */
@@ -54,17 +59,10 @@
                 max-width: 100% !important; 
                 background: white !important;
                 gap: 8px !important;
-                zoom: 0.74; /* Ajuste preciso para evitar salto de hoja */
+                zoom: 0.74;
             }
-            
-            /* Corrección del Empalme de Textos */
-            .p-4, .p-3 { 
-                padding: 8px !important; 
-            }
-            .pt-8, .pt-7 { 
-                padding-top: 30px !important; /* Fuerza el espacio exacto debajo del título oscuro */
-            }
-            
+            .p-4, .p-3 { padding: 8px !important; }
+            .pt-8, .pt-7 { padding-top: 30px !important; }
             .mt-6, .mt-4, .mt-2 { margin-top: 4px !important; }
             .mb-4, .mb-2 { margin-bottom: 2px !important; }
             
@@ -108,7 +106,7 @@
         </button>
     </div>
 
-    <!-- CONTENEDOR PRINCIPAL IMPRIMIBLE (FORMATO VERTICAL 1 PÁGINA) -->
+    <!-- CONTENEDOR PRINCIPAL IMPRIMIBLE -->
     <div id="pdf-content" class="max-w-5xl mx-auto mt-4 px-3 grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 rounded-lg shadow-sm">
 
         <!-- 1. PERFIL DEL GROUP LEADER -->
@@ -161,11 +159,8 @@
                             <th class="py-1 text-right w-1/4">AVANCE GENERAL POR SECCIÓN</th>
                         </tr>
                     </thead>
-                    <tbody id="roadmap-body">
-                        <!-- Generado dinámicamente con JS -->
-                    </tbody>
+                    <tbody id="roadmap-body"></tbody>
                 </table>
-                <!-- Leyenda -->
                 <div class="flex justify-between items-center mt-2 pt-2 border-t text-[9px] text-gray-600 font-medium">
                     <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-[#10b981] mr-1"></div> ESTANDARIZADO - 100%</div>
                     <div class="flex items-center"><div class="w-3 h-3 rounded-full bg-[#f59e0b] mr-1"></div> EN OPERACIÓN - 50%</div>
@@ -175,7 +170,7 @@
             </div>
         </div>
 
-        <!-- SECCIÓN DE ÚLTIMOS COMENTARIOS Y ACUERDOS REGISTRADOS -->
+        <!-- ÚLTIMOS COMENTARIOS -->
         <div class="bg-slate-50 border border-slate-200 rounded shadow-sm md:col-span-3 p-3 page-break-avoid">
             <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center">
                 <i class="fas fa-comment-dots text-blue-600 mr-1.5"></i> ÚLTIMOS COMENTARIOS Y ACUERDOS REGISTRADOS
@@ -196,10 +191,10 @@
             </div>
         </div>
 
-        <!-- 4. EVALUACIÓN Y 5. HISTORIAL -->
+        <!-- EVALUACIÓN E HISTORIAL -->
         <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
             
-            <!-- 4. EVALUACIÓN DEL GL (REVISIÓN) -->
+            <!-- EVALUACIÓN DEL GL -->
             <div class="bg-white border rounded shadow-sm relative page-break-avoid">
                 <div class="card-header absolute top-0 left-0">4. EVALUACIÓN DEL GL (REVISIÓN)</div>
                 <div class="p-3 pt-7">
@@ -210,9 +205,7 @@
                                 <th class="text-center pb-1">PUNTUACIÓN (1 a 3)</th>
                             </tr>
                         </thead>
-                        <tbody id="eval-body">
-                            <!-- Generado dinámicamente -->
-                        </tbody>
+                        <tbody id="eval-body"></tbody>
                         <tfoot>
                             <tr class="border-t font-bold text-xs">
                                 <td class="py-1 text-right pr-2 uppercase">Total Obtenido:</td>
@@ -229,7 +222,6 @@
                         </tfoot>
                     </table>
 
-                    <!-- CAMPOS DE COMENTARIOS PARA LA EVALUACIÓN -->
                     <div class="mt-2 border-t pt-2 space-y-1.5 text-xs">
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase">Evaluador(es) / Coach:</label>
@@ -237,11 +229,11 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase">Hallazgos y Observaciones:</label>
-                            <textarea id="input-observaciones" rows="2" placeholder="Observaciones de la revisión..." class="w-full text-xs p-1 border rounded outline-none"></textarea>
+                            <textarea id="input-observaciones" rows="2" placeholder="Observaciones..." class="w-full text-xs p-1 border rounded outline-none"></textarea>
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase">Compromisos y Acuerdos:</label>
-                            <textarea id="input-compromisos" rows="2" placeholder="Acuerdos establecidos..." class="w-full text-xs p-1 border rounded outline-none"></textarea>
+                            <textarea id="input-compromisos" rows="2" placeholder="Acuerdos..." class="w-full text-xs p-1 border rounded outline-none"></textarea>
                         </div>
                     </div>
 
@@ -251,7 +243,7 @@
                 </div>
             </div>
 
-            <!-- 5. HISTORIAL Y TENDENCIA DE MEJORA -->
+            <!-- HISTORIAL -->
             <div class="bg-white border rounded shadow-sm relative page-break-avoid">
                 <div class="card-header absolute top-0 left-0">5. HISTORIAL Y TENDENCIA DE MEJORA</div>
                 <div class="p-3 pt-7">
@@ -276,7 +268,7 @@
 
         </div>
 
-        <!-- 6. RESUMEN GENERAL (DONAS DE COMPETENCIA AL FINAL DE LA PÁGINA) -->
+        <!-- RESUMEN GENERAL -->
         <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid mt-1">
             <div class="card-header absolute top-0 left-0">6. RESUMEN GENERAL DEL ENTRENAMIENTO (PROCESO POR COMPETENCIA)</div>
             <div class="p-3 pt-7 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
@@ -322,6 +314,22 @@
     </div>
 
     <script>
+        // --- TUS CREDENCIALES REALES DE FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCwDFW-t1Fe4XdLCJrP4xiFnbWXbKJU24I",
+            authDomain: "tps-evaluacion-gl-s.firebaseapp.com",
+            databaseURL: "https://tps-evaluacion-gl-s-default-rtdb.firebaseio.com", // Asegúrate de incluir la URL de tu Realtime Database si aplica
+            projectId: "tps-evaluacion-gl-s",
+            storageBucket: "tps-evaluacion-gl-s.firebasestorage.app",
+            messagingSenderId: "702193525121",
+            appId: "1:702193525121:web:55b2261d6db935d87c4880",
+            measurementId: "G-B0WF5YYERV"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
         const groupLeaders = [
             { name: "Angel Serrano", area: "ESTAMPADO", defaultPhoto: "ANGEL SERRANO.png" },
             { name: "Pedro Torres", area: "ESTAMPADO", defaultPhoto: "PEDRO TORRES.png" },
@@ -354,6 +362,7 @@
         let roadmapData = {}; 
         let evalData = [0,0,0,0,0];
         let viewingEvaluationId = null;
+        let dbRef = null;
 
         function init() {
             const selector = document.getElementById("gl-selector");
@@ -389,18 +398,34 @@
             imgEl.src = gl.defaultPhoto;
             fallbackEl.textContent = gl.name;
 
-            let savedRoadmap = localStorage.getItem(`roadmap_${currentGL}`);
-            if(savedRoadmap) {
-                roadmapData = JSON.parse(savedRoadmap);
-            } else {
-                roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
-            }
+            if(dbRef) dbRef.off();
+
+            const safeKey = currentGL.replace(/\s+/g, '_');
+            dbRef = db.ref(`evaluaciones_fmds/${safeKey}`);
+
+            dbRef.on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                
+                if(data.roadmap) {
+                    roadmapData = data.roadmap;
+                } else {
+                    roadmapData = {};
+                    roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
+                }
+
+                updateRoadmapUI();
+                
+                const history = data.history ? Object.values(data.history) : [];
+                history.sort((a, b) => b.id - a.id);
+                renderHistoryList(history);
+                
+                if(!viewingEvaluationId) {
+                    updateLatestCommentsDisplay(history);
+                }
+            });
 
             evalData = [0,0,0,0,0]; 
             updateEvalUI();
-            updateRoadmapUI();
-            loadHistory();
-            updateLatestCommentsDisplay();
         }
 
         function renderRoadmap() {
@@ -440,7 +465,7 @@
             let currentVal = roadmapData[temaId][colIndex];
             roadmapData[temaId][colIndex] = currentVal === 3 ? 0 : currentVal + 1;
             
-            localStorage.setItem(`roadmap_${currentGL}`, JSON.stringify(roadmapData));
+            dbRef.child('roadmap').set(roadmapData);
             updateRoadmapUI();
         }
 
@@ -448,6 +473,7 @@
             let totalPctSum = 0;
 
             roadmapTemas.forEach(tema => {
+                if(!roadmapData[tema.id]) roadmapData[tema.id] = [0,0,0,0];
                 let rowSum = 0;
                 roadmapData[tema.id].forEach((val, i) => {
                     let dot = document.getElementById(`dot-${tema.id}-${i}`);
@@ -561,10 +587,9 @@
             let obsVal = document.getElementById("input-observaciones").value.trim();
             let agreVal = document.getElementById("input-compromisos").value.trim();
 
-            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
-            
+            let newRecordId = Date.now();
             let newRecord = {
-                id: Date.now(),
+                id: newRecordId,
                 date: dateStr,
                 gmbPercent: currentGMB,
                 total: total,
@@ -578,14 +603,14 @@
                 roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
             };
 
-            history.unshift(newRecord);
-            localStorage.setItem(`hist_${currentGL}`, JSON.stringify(history));
-
-            resetFormInputs();
-            loadHistory();
-            updateLatestCommentsDisplay();
-            
-            alert(`Evaluación registrada correctamente para ${currentGL}.`);
+            dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
+                resetFormInputs();
+                resetToNewEvaluation();
+                alert(`Evaluación guardada y sincronizada en la nube para ${currentGL}.`);
+            }).catch(err => {
+                console.error("Error al guardar en Firebase:", err);
+                alert("Ocurrió un error al guardar en la nube.");
+            });
         }
 
         function resetFormInputs() {
@@ -597,48 +622,39 @@
         }
 
         function deleteEvaluation(id) {
-            if(!confirm("¿Deseas eliminar esta evaluación? Esta acción afectará el promedio y el historial registrado.")) {
-                return;
-            }
+            if(!confirm("¿Deseas eliminar esta evaluación de la nube?")) return;
 
-            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
-            history = history.filter(item => item.id !== id);
-            localStorage.setItem(`hist_${currentGL}`, JSON.stringify(history));
-
-            if(viewingEvaluationId === id) {
-                resetToNewEvaluation();
-            } else {
-                loadHistory();
-                updateLatestCommentsDisplay();
-            }
+            dbRef.child(`history/${id}`).remove().then(() => {
+                if(viewingEvaluationId === id) {
+                    resetToNewEvaluation();
+                }
+            });
         }
 
         function viewEvaluation(id) {
-            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
-            let rec = history.find(item => item.id === id);
-            if(!rec) return;
+            dbRef.child(`history/${id}`).once('value', (snapshot) => {
+                let rec = snapshot.val();
+                if(!rec) return;
 
-            viewingEvaluationId = id;
+                viewingEvaluationId = id;
+                document.getElementById("view-mode-banner").classList.remove("hidden");
+                document.getElementById("view-mode-date").textContent = rec.date;
 
-            document.getElementById("view-mode-banner").classList.remove("hidden");
-            document.getElementById("view-mode-date").textContent = rec.date;
+                if(rec.evalDataSnapshot) evalData = [...rec.evalDataSnapshot];
+                if(rec.roadmapSnapshot) {
+                    roadmapData = JSON.parse(JSON.stringify(rec.roadmapSnapshot));
+                    updateRoadmapUI();
+                }
+                updateEvalUI();
 
-            if(rec.evalDataSnapshot) evalData = [...rec.evalDataSnapshot];
-            if(rec.roadmapSnapshot) {
-                roadmapData = JSON.parse(JSON.stringify(rec.roadmapSnapshot));
-                updateRoadmapUI();
-            }
-            updateEvalUI();
+                document.getElementById("input-evaluador").value = rec.evaluator || "";
+                document.getElementById("input-observaciones").value = rec.observations || "";
+                document.getElementById("input-compromisos").value = rec.agreements || "";
 
-            document.getElementById("input-evaluador").value = rec.evaluator || "";
-            document.getElementById("input-observaciones").value = rec.observations || "";
-            document.getElementById("input-compromisos").value = rec.agreements || "";
-
-            document.getElementById("disp-evaluador").textContent = rec.evaluator || "Sin registro";
-            document.getElementById("disp-observaciones").textContent = rec.observations || "Sin observaciones";
-            document.getElementById("disp-compromisos").textContent = rec.agreements || "Sin acuerdos";
-
-            loadHistory();
+                document.getElementById("disp-evaluador").textContent = rec.evaluator || "Sin registro";
+                document.getElementById("disp-observaciones").textContent = rec.observations || "Sin observaciones";
+                document.getElementById("disp-compromisos").textContent = rec.agreements || "Sin acuerdos";
+            });
         }
 
         function resetToNewEvaluation() {
@@ -646,18 +662,24 @@
             document.getElementById("view-mode-banner").classList.add("hidden");
             resetFormInputs();
             
-            let savedRoadmap = localStorage.getItem(`roadmap_${currentGL}`);
-            if(savedRoadmap) {
-                roadmapData = JSON.parse(savedRoadmap);
-            }
-            updateRoadmapUI();
-            loadHistory();
-            updateLatestCommentsDisplay();
+            dbRef.child('roadmap').once('value', (snapshot) => {
+                if(snapshot.exists()) {
+                    roadmapData = snapshot.val();
+                } else {
+                    roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
+                }
+                updateRoadmapUI();
+            });
+
+            dbRef.child('history').once('value', (snapshot) => {
+                const history = snapshot.val() ? Object.values(snapshot.val()) : [];
+                history.sort((a, b) => b.id - a.id);
+                updateLatestCommentsDisplay(history);
+            });
         }
 
-        function updateLatestCommentsDisplay() {
-            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
-            if(history.length > 0) {
+        function updateLatestCommentsDisplay(history) {
+            if(history && history.length > 0) {
                 let latest = history[0];
                 document.getElementById("disp-evaluador").textContent = latest.evaluator || "Sin registro";
                 document.getElementById("disp-observaciones").textContent = latest.observations || "Sin observaciones";
@@ -669,12 +691,11 @@
             }
         }
 
-        function loadHistory() {
+        function renderHistoryList(history) {
             const tbody = document.getElementById("history-body");
-            let history = JSON.parse(localStorage.getItem(`hist_${currentGL}`) || "[]");
             
-            if(history.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-2 text-gray-400 italic text-xs">No hay evaluaciones registradas</td></tr>`;
+            if(!history || history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-3 text-gray-400 italic text-xs">No hay evaluaciones registradas</td></tr>`;
                 return;
             }
 
@@ -707,7 +728,6 @@
             });
         }
 
-        // --- EXPORTAR A PDF (AJUSTE AUTOMÁTICO EN 1 PÁGINA VERTICAL) ---
         function exportToPDF() {
             window.print();
         }
