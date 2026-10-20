@@ -7,10 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Firebase SDKs servidos por Firebase Hosting. init.js se configura solo -->
-    <script src="/__/firebase/9.23.0/firebase-app-compat.js"></script>
-    <script src="/__/firebase/9.23.0/firebase-database-compat.js"></script>
-    <script src="/__/firebase/init.js"></script>
+    <!-- Firebase SDKs (compat): App + Realtime Database + App Check -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script>
+        // Anti-phishing: evita que otra página incruste esta app en un marco para engañar a los usuarios
+        if (window.top !== window.self) { try { window.top.location = window.self.location; } catch (e) { document.documentElement.innerHTML = ""; } }
+    </script>
 
     <style>
         body { background-color: #f3f4f6; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -31,10 +35,15 @@
         .eval-btn.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .row-selected { background-color: #eff6ff !important; border-left: 3px solid #3b82f6; }
 
+        /* Pantalla de inicio de sesión */
+        #login-screen { position: fixed; inset: 0; z-index: 100; background-color: #0b132b; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        #login-screen:focus-within input { outline: none; }
+        #login-screen input:focus-visible, #login-screen button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+
         @page { size: letter portrait; margin: 4mm; }
 
         @media print {
-            header, #view-mode-banner, .no-print, button { display: none !important; }
+            header, #view-mode-banner, #login-screen, .no-print, button { display: none !important; }
             html, body {
                 background-color: white !important; padding: 0 !important; margin: 0 !important;
                 -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
@@ -279,7 +288,25 @@
     </div>
 
     <script>
-        // --- FIREBASE ---
+        // --- CONFIGURACIÓN DE FIREBASE ---
+        // Pega aquí el firebaseConfig de tu app web (Firebase > Configuración del proyecto > Tus apps).
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgBEnU8HHB514D6J2draKUN9thyAufHq8",
+            authDomain: "tps-evaluacion-gl-s-6c651.firebaseapp.com",
+            databaseURL: "https://tps-evaluacion-gl-s-6c651-default-rtdb.firebaseio.com",
+            projectId: "tps-evaluacion-gl-s-6c651",
+            storageBucket: "tps-evaluacion-gl-s-6c651.firebasestorage.app",
+            messagingSenderId: "1091854815853",
+            appId: "1:1091854815853:web:5eccfe0782a83bb3c72564"
+        };
+
+        // Clave de sitio de reCAPTCHA v3 para App Check (Paso 6 de la guía). Déjala vacía hasta tenerla.
+        const RECAPTCHA_SITE_KEY = "";
+
+        firebase.initializeApp(firebaseConfig);
+        if (RECAPTCHA_SITE_KEY) {
+            firebase.appCheck().activate(RECAPTCHA_SITE_KEY, true);
+        }
         const db = firebase.database();
 
         const groupLeaders = [
@@ -321,11 +348,7 @@
             return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
 
-        // --- INICIALIZACIÓN DIRECTA ---
-        window.addEventListener('DOMContentLoaded', () => {
-            init();
-        });
-
+        // --- APP ---
         function init() {
             const selector = document.getElementById("gl-selector");
             selector.innerHTML = "";
@@ -384,6 +407,7 @@
                 }
             }, (err) => {
                 console.error("Error de lectura:", err);
+                alert("No se pudo leer la información. Revisa tu conexión o la configuración de Firebase.");
             });
 
             evalData = [0,0,0,0,0];
@@ -428,6 +452,7 @@
             roadmapData[temaId][colIndex] = currentVal === 3 ? 0 : currentVal + 1;
             dbRef.child('roadmap').set(roadmapData).catch(err => {
                 console.error(err);
+                alert("No se pudo guardar. Revisa tu conexión.");
             });
             updateRoadmapUI();
         }
@@ -695,6 +720,8 @@
         function exportToPDF() {
             window.print();
         }
+
+        window.onload = init;
     </script>
 </body>
 </html>
