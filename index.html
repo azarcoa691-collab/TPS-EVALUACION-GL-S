@@ -289,7 +289,6 @@
 
     <script>
         // --- CONFIGURACIÓN DE FIREBASE ---
-        // Pega aquí el firebaseConfig de tu app web (Firebase > Configuración del proyecto > Tus apps).
         const firebaseConfig = {
             authDomain: "tps-evaluacion-gl-s-6c651.firebaseapp.com",
             databaseURL: "https://tps-evaluacion-gl-s-6c651-default-rtdb.firebaseio.com",
@@ -299,7 +298,6 @@
             appId: "1:1091854815853:web:5eccfe0782a83bb3c72564"
         };
 
-        // Clave de sitio de reCAPTCHA v3 para App Check (Paso 6 de la guía). Déjala vacía hasta tenerla.
         const RECAPTCHA_SITE_KEY = "";
 
         firebase.initializeApp(firebaseConfig);
@@ -342,12 +340,10 @@
         let viewingEvaluationId = null;
         let dbRef = null;
 
-        // Escapa texto antes de insertarlo como HTML
         function esc(s) {
             return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
 
-        // --- APP ---
         function init() {
             const selector = document.getElementById("gl-selector");
             selector.innerHTML = "";
@@ -406,7 +402,6 @@
                 }
             }, (err) => {
                 console.error("Error de lectura:", err);
-                alert("No se pudo leer la información. Revisa tu conexión o la configuración de Firebase.");
             });
 
             evalData = [0,0,0,0,0];
@@ -451,7 +446,6 @@
             roadmapData[temaId][colIndex] = currentVal === 3 ? 0 : currentVal + 1;
             dbRef.child('roadmap').set(roadmapData).catch(err => {
                 console.error(err);
-                alert("No se pudo guardar. Revisa tu conexión.");
             });
             updateRoadmapUI();
         }
@@ -593,10 +587,8 @@
             dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
                 resetFormInputs();
                 resetToNewEvaluation();
-                alert(`Evaluación guardada y sincronizada en la nube para ${currentGL}.`);
             }).catch(err => {
                 console.error("Error al guardar en Firebase:", err);
-                alert("Ocurrió un error al guardar en la nube.");
             });
         }
 
