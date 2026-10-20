@@ -1,3 +1,8 @@
+Para quitar el botón sin afectar la visualización de las fotos, solo debes eliminar el bloque de código HTML correspondiente al botón. Las fotos seguirán cargándose automáticamente siempre y cuando los archivos de imagen (ej. `BRYAN FLORES.png`) estén guardados en la misma carpeta que tu archivo `index.html` en GitHub.
+
+Aquí tienes el código completo ya actualizado sin el botón de "Subir Foto". Solo cópialo y reemplaza el contenido de tu archivo `index.html`:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -49,11 +54,6 @@
                         <img id="gl-photo" src="" alt="Foto GL" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('gl-photo-fallback').style.display='block';">
                         <span id="gl-photo-fallback" class="font-bold text-center px-2" style="display: none;">Foto</span>
                     </div>
-                    <!-- Botón para subir foto -->
-                    <label class="mt-2 cursor-pointer bg-blue-50 text-blue-600 text-xs px-3 py-1 rounded border border-blue-200 hover:bg-blue-100 transition">
-                        <i class="fas fa-camera mr-1"></i> Subir Foto
-                        <input type="file" id="photo-upload" class="hidden" accept="image/*" onchange="uploadPhoto(event)">
-                    </label>
                 </div>
                 <div class="flex-1 w-full space-y-4">
                     <div class="border-b pb-2">
@@ -274,20 +274,14 @@
             document.getElementById("gl-name").textContent = gl.name;
             document.getElementById("gl-area").textContent = gl.area;
             
-            // Cargar foto (desde localStorage si subió una, o la por defecto)
-            const savedPhoto = localStorage.getItem(`photo_${currentGL}`);
+            // Cargar foto
             const imgEl = document.getElementById("gl-photo");
             const fallbackEl = document.getElementById("gl-photo-fallback");
             
             imgEl.style.display = 'block';
             fallbackEl.style.display = 'none';
-            
-            if (savedPhoto) {
-                imgEl.src = savedPhoto;
-            } else {
-                imgEl.src = gl.defaultPhoto;
-                fallbackEl.textContent = gl.name;
-            }
+            imgEl.src = gl.defaultPhoto;
+            fallbackEl.textContent = gl.name;
 
             // Cargar datos de Roadmap y Evaluaciones guardados en LocalStorage
             let savedRoadmap = localStorage.getItem(`roadmap_${currentGL}`);
@@ -304,24 +298,6 @@
             
             updateRoadmapUI();
             loadHistory();
-        }
-
-        // --- SUBIR FOTOGRAFÍA ---
-        function uploadPhoto(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64Image = e.target.result;
-                    // Guardar en LocalStorage asignado a este GL
-                    localStorage.setItem(`photo_${currentGL}`, base64Image);
-                    // Actualizar la imagen en pantalla
-                    document.getElementById("gl-photo").src = base64Image;
-                    document.getElementById("gl-photo").style.display = 'block';
-                    document.getElementById("gl-photo-fallback").style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
         }
 
         // --- ROADMAP DE APRENDIZAJE ---
