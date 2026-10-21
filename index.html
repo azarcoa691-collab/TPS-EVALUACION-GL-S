@@ -215,8 +215,9 @@
                     </table>
 
                     <div class="mt-2 border-t pt-2 space-y-1.5 text-xs">
+                        <!-- Evaluadores -->
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Evaluador(es) / GL:</label>
+                            <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Evaluador(es):</label>
                             <div class="flex gap-1 mb-1">
                                 <select id="select-evaluador-dropdown" class="flex-1 text-xs p-1 border rounded outline-none bg-white">
                                     <option value="">-- Seleccionar Evaluador --</option>
@@ -231,6 +232,25 @@
                             </div>
                             <input type="hidden" id="input-evaluador" value="">
                         </div>
+
+                        <!-- Asistencia de GLs -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Asistencia de GL(s):</label>
+                            <div class="flex gap-1 mb-1">
+                                <select id="select-asistencia-dropdown" class="flex-1 text-xs p-1 border rounded outline-none bg-white">
+                                    <option value="">-- Seleccionar Group Leader --</option>
+                                </select>
+                                <button type="button" onclick="addAsistenciaPerson()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow">
+                                    <i class="fas fa-plus mr-0.5"></i> Agregar
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between bg-slate-50 p-1.5 rounded border">
+                                <span id="asistencia-seleccionados-text" class="text-gray-700 italic text-[11px]">Ninguno seleccionado</span>
+                                <button type="button" onclick="clearAsistencia()" class="text-red-500 hover:text-red-700 text-[10px] font-bold no-print"><i class="fas fa-trash-alt mr-1"></i>Limpiar</button>
+                            </div>
+                            <input type="hidden" id="input-asistencia" value="">
+                        </div>
+
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase">Hallazgos y Observaciones:</label>
                             <textarea id="input-observaciones" rows="2" placeholder="Observaciones..." class="w-full text-xs p-1 border rounded outline-none"></textarea>
@@ -346,7 +366,6 @@
             { name: "Arturo Teniente", area: "SOLDADURA", defaultPhoto: "ARTURO TENIENTE.png" }
         ];
 
-        // Lista específica de evaluadores proporcionada
         const evaluadoresList = [
             "Edgar Damian",
             "Gisela Espinoza",
@@ -377,6 +396,7 @@
         let viewingEvaluationId = null;
         let dbRef = null;
         let selectedEvaluatorsList = [];
+        let selectedAsistenciaList = [];
 
         function esc(s) {
             return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -392,14 +412,24 @@
                 selector.appendChild(opt);
             });
 
-            // Poblar selector desplegable exclusivamente con la lista de evaluadores
-            const dropdown = document.getElementById("select-evaluador-dropdown");
-            dropdown.innerHTML = '<option value="">-- Seleccionar Evaluador --</option>';
+            // Poblar selector de evaluadores
+            const dropdownEval = document.getElementById("select-evaluador-dropdown");
+            dropdownEval.innerHTML = '<option value="">-- Seleccionar Evaluador --</option>';
             evaluadoresList.forEach(evalName => {
                 let opt = document.createElement("option");
                 opt.value = evalName;
                 opt.textContent = evalName;
-                dropdown.appendChild(opt);
+                dropdownEval.appendChild(opt);
+            });
+
+            // Poblar selector de asistencia con los GLs
+            const dropdownAsist = document.getElementById("select-asistencia-dropdown");
+            dropdownAsist.innerHTML = '<option value="">-- Seleccionar Group Leader --</option>';
+            groupLeaders.forEach(gl => {
+                let opt = document.createElement("option");
+                opt.value = gl.name;
+                opt.textContent = gl.name + " (" + gl.area + ")";
+                dropdownAsist.appendChild(opt);
             });
 
             currentGL = groupLeaders[0].name;
@@ -659,6 +689,36 @@
             }
         }
 
+        function addAsistenciaPerson() {
+            const dropdown = document.getElementById("select-asistencia-dropdown");
+            const selectedVal = dropdown.value;
+            if(!selectedVal) return;
+
+            if(!selectedAsistenciaList.includes(selectedVal)) {
+                selectedAsistenciaList.push(selectedVal);
+            }
+            updateAsistenciaDisplay();
+            dropdown.value = "";
+        }
+
+        function clearAsistencia() {
+            selectedAsistenciaList = [];
+            updateAsistenciaDisplay();
+        }
+
+        function updateAsistenciaDisplay() {
+            const textSpan = document.getElementById("asistencia-seleccionados-text");
+            const hiddenInput = document.getElementById("input-asistencia");
+            if(selectedAsistenciaList.length > 0) {
+                let joined = selectedAsistenciaList.join(" / ");
+                textSpan.textContent = joined;
+                hiddenInput.value = joined;
+            } else {
+                textSpan.textContent = "Ninguno seleccionado";
+                hiddenInput.value = "";
+            }
+        }
+
         function saveEvaluation() {
             if(evalData.includes(0)) {
                 alert("Por favor, califica todos los 5 elementos (selecciona de 1 a 3) antes de guardar.");
@@ -677,6 +737,10 @@
 
             let evaluatorVal = document.getElementById("input-evaluador").value.trim();
             if(!evaluatorVal) evaluatorVal = "Sin especificar";
+            
+            let asistenciaVal = document.getElementById("input-asistencia").value.trim();
+            if(!asistenciaVal) asistenciaVal = "Sin especificar";
+
             let obsVal = document.getElementById("input-observaciones").value.trim();
             let agreVal = document.getElementById("input-compromisos").value.trim();
 
@@ -690,6 +754,7 @@
                 label: perfLabel,
                 emoji: emoji,
                 evaluator: evaluatorVal,
+                asistencia: asistenciaVal,
                 observations: obsVal,
                 agreements: agreVal,
                 evalDataSnapshot: [...evalData],
@@ -707,6 +772,7 @@
         function resetFormInputs() {
             evalData = [0,0,0,0,0];
             clearEvaluators();
+            clearAsistencia();
             document.getElementById("input-observaciones").value = "";
             document.getElementById("input-compromisos").value = "";
             updateEvalUI();
@@ -738,8 +804,11 @@
                 }
                 updateEvalUI();
 
-                selectedEvaluatorsList = rec.evaluator ? rec.evaluator.split(" / ") : [];
+                selectedEvaluatorsList = rec.evaluator && rec.evaluator !== "Sin especificar" ? rec.evaluator.split(" / ") : [];
                 updateEvaluatorsDisplay();
+
+                selectedAsistenciaList = rec.asistencia && rec.asistencia !== "Sin especificar" ? rec.asistencia.split(" / ") : [];
+                updateAsistenciaDisplay();
 
                 document.getElementById("input-observaciones").value = rec.observations || "";
                 document.getElementById("input-compromisos").value = rec.agreements || "";
