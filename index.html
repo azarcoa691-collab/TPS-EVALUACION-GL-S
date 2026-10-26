@@ -7,14 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Firebase SDKs (compat): App + Realtime Database + App Check -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script>
-        // Anti-phishing
-        if (window.top !== window.self) { try { window.top.location = window.self.location; } catch (e) { document.documentElement.innerHTML = ""; } }
-    </script>
+    <!-- Firebase SDKs servidos por Firebase Hosting. init.js se configura solo -->
+    <script src="/__/firebase/9.23.0/firebase-app-compat.js"></script>
+    <script src="/__/firebase/9.23.0/firebase-database-compat.js"></script>
+    <script src="/__/firebase/init.js"></script>
 
     <style>
         body { background-color: #f3f4f6; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -81,33 +77,12 @@
 
     <div id="pdf-content" class="max-w-5xl mx-auto mt-4 px-3 grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 rounded-lg shadow-sm">
 
-        <!-- RESUMEN DE AVANCE GENERAL POR ÁREA -->
-        <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid no-print">
-            <div class="card-header absolute top-0 left-0">RESUMEN DE AVANCE GENERAL POR ÁREA</div>
-            <div class="p-4 pt-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] text-gray-500 uppercase font-bold">Área Estampado</span>
-                        <h4 id="area-estampado-text" class="text-lg font-bold text-navy">0%</h4>
-                    </div>
-                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="area-estampado-badge">0%</div>
-                </div>
-                <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] text-gray-500 uppercase font-bold">Área Soldadura</span>
-                        <h4 id="area-soldadura-text" class="text-lg font-bold text-navy">0%</h4>
-                    </div>
-                    <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs" id="area-soldadura-badge">0%</div>
-                </div>
-            </div>
-        </div>
-
         <!-- 1. PERFIL -->
         <div class="bg-white border rounded shadow-sm md:col-span-2 relative page-break-avoid">
             <div class="card-header absolute top-0 left-0">1. PERFIL DEL GROUP LEADER</div>
             <div class="p-4 pt-8 flex flex-row gap-4 items-center">
                 <div class="w-24 h-28 bg-slate-800 text-white rounded flex items-center justify-center overflow-hidden border border-slate-300 shrink-0">
-                    <img id="gl-photo" src="" alt="Foto GL" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('gl-photo-fallback').style.display='block';">
+                    <img id="gl-photo" src="" alt="Foto GL" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('gl-photo-fallback').style.display='block';">
                     <span id="gl-photo-fallback" class="font-bold text-center px-1 text-xs" style="display: none;">Foto</span>
                 </div>
                 <div class="flex-1 w-full space-y-2 text-xs">
@@ -170,7 +145,7 @@
             </h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-[11px]">
                 <div class="bg-white p-2 rounded border">
-                    <span class="font-bold text-gray-500 block uppercase text-[9px] mb-0.5">Evaluador(es) / GL:</span>
+                    <span class="font-bold text-gray-500 block uppercase text-[9px] mb-0.5">Evaluador(es):</span>
                     <p id="disp-evaluador" class="text-gray-800 font-semibold italic">Sin registro previo</p>
                 </div>
                 <div class="bg-white p-2 rounded border">
@@ -215,42 +190,10 @@
                     </table>
 
                     <div class="mt-2 border-t pt-2 space-y-1.5 text-xs">
-                        <!-- Evaluadores -->
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Evaluador(es):</label>
-                            <div class="flex gap-1 mb-1">
-                                <select id="select-evaluador-dropdown" class="flex-1 text-xs p-1 border rounded outline-none bg-white">
-                                    <option value="">-- Seleccionar Evaluador --</option>
-                                </select>
-                                <button type="button" onclick="addEvaluatorPerson()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow">
-                                    <i class="fas fa-plus mr-0.5"></i> Agregar
-                                </button>
-                            </div>
-                            <div class="flex items-center justify-between bg-slate-50 p-1.5 rounded border">
-                                <span id="evaluadores-seleccionados-text" class="text-gray-700 italic text-[11px]">Ninguno seleccionado</span>
-                                <button type="button" onclick="clearEvaluators()" class="text-red-500 hover:text-red-700 text-[10px] font-bold no-print"><i class="fas fa-trash-alt mr-1"></i>Limpiar</button>
-                            </div>
-                            <input type="hidden" id="input-evaluador" value="">
+                            <label class="block text-[10px] font-bold text-gray-600 uppercase">Evaluador(es) / Coach:</label>
+                            <input type="text" id="input-evaluador" placeholder="Ej. Gisela Espinoza / Arturo Hernandez" class="w-full text-xs p-1 border rounded outline-none">
                         </div>
-
-                        <!-- Asistencia de GLs -->
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Asistencia de GL(s):</label>
-                            <div class="flex gap-1 mb-1">
-                                <select id="select-asistencia-dropdown" class="flex-1 text-xs p-1 border rounded outline-none bg-white">
-                                    <option value="">-- Seleccionar Group Leader --</option>
-                                </select>
-                                <button type="button" onclick="addAsistenciaPerson()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow">
-                                    <i class="fas fa-plus mr-0.5"></i> Agregar
-                                </button>
-                            </div>
-                            <div class="flex items-center justify-between bg-slate-50 p-1.5 rounded border">
-                                <span id="asistencia-seleccionados-text" class="text-gray-700 italic text-[11px]">Ninguno seleccionado</span>
-                                <button type="button" onclick="clearAsistencia()" class="text-red-500 hover:text-red-700 text-[10px] font-bold no-print"><i class="fas fa-trash-alt mr-1"></i>Limpiar</button>
-                            </div>
-                            <input type="hidden" id="input-asistencia" value="">
-                        </div>
-
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase">Hallazgos y Observaciones:</label>
                             <textarea id="input-observaciones" rows="2" placeholder="Observaciones..." class="w-full text-xs p-1 border rounded outline-none"></textarea>
@@ -336,22 +279,7 @@
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DE FIREBASE ---
-        const firebaseConfig = {
-            authDomain: "tps-evaluacion-gl-s-6c651.firebaseapp.com",
-            databaseURL: "https://tps-evaluacion-gl-s-6c651-default-rtdb.firebaseio.com",
-            projectId: "tps-evaluacion-gl-s-6c651",
-            storageBucket: "tps-evaluacion-gl-s-6c651.firebasestorage.app",
-            messagingSenderId: "1091854815853",
-            appId: "1:1091854815853:web:5eccfe0782a83bb3c72564"
-        };
-
-        const RECAPTCHA_SITE_KEY = "";
-
-        firebase.initializeApp(firebaseConfig);
-        if (RECAPTCHA_SITE_KEY) {
-            firebase.appCheck().activate(RECAPTCHA_SITE_KEY, true);
-        }
+        // --- FIREBASE ---
         const db = firebase.database();
 
         const groupLeaders = [
@@ -364,14 +292,6 @@
             { name: "Ivan Hernandez", area: "SOLDADURA", defaultPhoto: "IVAN HERNANDEZ.png" },
             { name: "Omar Trujillo", area: "SOLDADURA", defaultPhoto: "OMAR TRUJILLO.png" },
             { name: "Arturo Teniente", area: "SOLDADURA", defaultPhoto: "ARTURO TENIENTE.png" }
-        ];
-
-        const evaluadoresList = [
-            "Edgar Damian",
-            "Gisela Espinoza",
-            "Paola Ulloa",
-            "Alejandra Zarco",
-            "Tomas Torres"
         ];
 
         const roadmapTemas = [
@@ -395,12 +315,16 @@
         let evalData = [0,0,0,0,0];
         let viewingEvaluationId = null;
         let dbRef = null;
-        let selectedEvaluatorsList = [];
-        let selectedAsistenciaList = [];
 
+        // Escapa texto antes de insertarlo como HTML
         function esc(s) {
             return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
+
+        // --- INICIALIZACIÓN DIRECTA ---
+        window.addEventListener('DOMContentLoaded', () => {
+            init();
+        });
 
         function init() {
             const selector = document.getElementById("gl-selector");
@@ -411,32 +335,10 @@
                 opt.textContent = gl.name;
                 selector.appendChild(opt);
             });
-
-            // Poblar selector de evaluadores
-            const dropdownEval = document.getElementById("select-evaluador-dropdown");
-            dropdownEval.innerHTML = '<option value="">-- Seleccionar Evaluador --</option>';
-            evaluadoresList.forEach(evalName => {
-                let opt = document.createElement("option");
-                opt.value = evalName;
-                opt.textContent = evalName;
-                dropdownEval.appendChild(opt);
-            });
-
-            // Poblar selector de asistencia con los GLs
-            const dropdownAsist = document.getElementById("select-asistencia-dropdown");
-            dropdownAsist.innerHTML = '<option value="">-- Seleccionar Group Leader --</option>';
-            groupLeaders.forEach(gl => {
-                let opt = document.createElement("option");
-                opt.value = gl.name;
-                opt.textContent = gl.name + " (" + gl.area + ")";
-                dropdownAsist.appendChild(opt);
-            });
-
             currentGL = groupLeaders[0].name;
             renderRoadmap();
             renderEvaluacion();
             loadGL();
-            updateAreasProgressOverview();
         }
 
         function changeGL() {
@@ -459,7 +361,8 @@
 
             if(dbRef) dbRef.off();
 
-            const safeKey = currentGL.replace(/\s+/g, '_');
+            // Limpieza robusta de la ruta para Firebase (remueve espacios y caracteres especiales)
+            const safeKey = currentGL.trim().replace(/[^a-zA-Z0-9_]/g, '_');
             dbRef = db.ref(`evaluaciones_fmds/${safeKey}`);
 
             dbRef.on('value', (snapshot) => {
@@ -480,7 +383,6 @@
                 if(!viewingEvaluationId) {
                     updateLatestCommentsDisplay(history);
                 }
-                updateAreasProgressOverview();
             }, (err) => {
                 console.error("Error de lectura:", err);
             });
@@ -557,37 +459,7 @@
             let generalGMB = Math.round(totalPctSum / roadmapTemas.length);
             document.getElementById("text-gmb").textContent = `${generalGMB}%`;
             document.getElementById("chart-gmb").style.background = `conic-gradient(#10b981 ${generalGMB}%, #e2e8f0 0%)`;
-            updateAreasProgressOverview();
             return generalGMB;
-        }
-
-        function updateAreasProgressOverview() {
-            let stampSum = 0, stampCount = 0;
-            let weldSum = 0, weldCount = 0;
-
-            groupLeaders.forEach(gl => {
-                let sKey = gl.name.replace(/\s+/g, '_');
-                let savedPct = localStorage.getItem(`gmb_pct_${sKey}`);
-                let val = savedPct ? parseInt(savedPct) : (gl.name === currentGL ? parseInt(document.getElementById("text-gmb").textContent) || 0 : 0);
-
-                if(gl.area === "ESTAMPADO") {
-                    stampSum += val;
-                    stampCount++;
-                } else if(gl.area === "SOLDADURA") {
-                    weldSum += val;
-                    weldCount++;
-                }
-            });
-
-            let stampAvg = stampCount > 0 ? Math.round(stampSum / stampCount) : 0;
-            let weldAvg = weldCount > 0 ? Math.round(weldSum / weldCount) : 0;
-
-            document.getElementById("area-estampado-text").textContent = `${stampAvg}%`;
-            document.getElementById("area-estampado-badge").textContent = `${stampAvg}%`;
-            document.getElementById("area-soldadura-text").textContent = `${weldAvg}%`;
-            document.getElementById("area-soldadura-badge").textContent = `${weldAvg}%`;
-
-            localStorage.setItem(`gmb_pct_${currentGL.replace(/\s+/g, '_')}`, document.getElementById("text-gmb").textContent.replace('%',''));
         }
 
         function renderEvaluacion() {
@@ -659,66 +531,6 @@
             }
         }
 
-        function addEvaluatorPerson() {
-            const dropdown = document.getElementById("select-evaluador-dropdown");
-            const selectedVal = dropdown.value;
-            if(!selectedVal) return;
-
-            if(!selectedEvaluatorsList.includes(selectedVal)) {
-                selectedEvaluatorsList.push(selectedVal);
-            }
-            updateEvaluatorsDisplay();
-            dropdown.value = "";
-        }
-
-        function clearEvaluators() {
-            selectedEvaluatorsList = [];
-            updateEvaluatorsDisplay();
-        }
-
-        function updateEvaluatorsDisplay() {
-            const textSpan = document.getElementById("evaluadores-seleccionados-text");
-            const hiddenInput = document.getElementById("input-evaluador");
-            if(selectedEvaluatorsList.length > 0) {
-                let joined = selectedEvaluatorsList.join(" / ");
-                textSpan.textContent = joined;
-                hiddenInput.value = joined;
-            } else {
-                textSpan.textContent = "Ninguno seleccionado";
-                hiddenInput.value = "";
-            }
-        }
-
-        function addAsistenciaPerson() {
-            const dropdown = document.getElementById("select-asistencia-dropdown");
-            const selectedVal = dropdown.value;
-            if(!selectedVal) return;
-
-            if(!selectedAsistenciaList.includes(selectedVal)) {
-                selectedAsistenciaList.push(selectedVal);
-            }
-            updateAsistenciaDisplay();
-            dropdown.value = "";
-        }
-
-        function clearAsistencia() {
-            selectedAsistenciaList = [];
-            updateAsistenciaDisplay();
-        }
-
-        function updateAsistenciaDisplay() {
-            const textSpan = document.getElementById("asistencia-seleccionados-text");
-            const hiddenInput = document.getElementById("input-asistencia");
-            if(selectedAsistenciaList.length > 0) {
-                let joined = selectedAsistenciaList.join(" / ");
-                textSpan.textContent = joined;
-                hiddenInput.value = joined;
-            } else {
-                textSpan.textContent = "Ninguno seleccionado";
-                hiddenInput.value = "";
-            }
-        }
-
         function saveEvaluation() {
             if(evalData.includes(0)) {
                 alert("Por favor, califica todos los 5 elementos (selecciona de 1 a 3) antes de guardar.");
@@ -736,15 +548,13 @@
             else if (pct >= 60) { perfLabel = "REGULAR"; emoji = "🙂"; }
 
             let evaluatorVal = document.getElementById("input-evaluador").value.trim();
-            if(!evaluatorVal) evaluatorVal = "Sin especificar";
-            
-            let asistenciaVal = document.getElementById("input-asistencia").value.trim();
-            if(!asistenciaVal) asistenciaVal = "Sin especificar";
-
             let obsVal = document.getElementById("input-observaciones").value.trim();
             let agreVal = document.getElementById("input-compromisos").value.trim();
 
-            let newRecordId = Date.now();
+            // Usar push() de Firebase en lugar de Date.now() fijo para evitar colisiones de ID
+            let newRecordRef = dbRef.child('history').push();
+            let newRecordId = newRecordRef.key;
+
             let newRecord = {
                 id: newRecordId,
                 date: dateStr,
@@ -754,25 +564,25 @@
                 label: perfLabel,
                 emoji: emoji,
                 evaluator: evaluatorVal,
-                asistencia: asistenciaVal,
                 observations: obsVal,
                 agreements: agreVal,
                 evalDataSnapshot: [...evalData],
                 roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
             };
 
-            dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
+            newRecordRef.set(newRecord).then(() => {
                 resetFormInputs();
                 resetToNewEvaluation();
+                alert(`Evaluación guardada y sincronizada en la nube para ${currentGL}.`);
             }).catch(err => {
                 console.error("Error al guardar en Firebase:", err);
+                alert("Ocurrió un error al guardar en la nube.");
             });
         }
 
         function resetFormInputs() {
             evalData = [0,0,0,0,0];
-            clearEvaluators();
-            clearAsistencia();
+            document.getElementById("input-evaluador").value = "";
             document.getElementById("input-observaciones").value = "";
             document.getElementById("input-compromisos").value = "";
             updateEvalUI();
@@ -804,12 +614,7 @@
                 }
                 updateEvalUI();
 
-                selectedEvaluatorsList = rec.evaluator && rec.evaluator !== "Sin especificar" ? rec.evaluator.split(" / ") : [];
-                updateEvaluatorsDisplay();
-
-                selectedAsistenciaList = rec.asistencia && rec.asistencia !== "Sin especificar" ? rec.asistencia.split(" / ") : [];
-                updateAsistenciaDisplay();
-
+                document.getElementById("input-evaluador").value = rec.evaluator || "";
                 document.getElementById("input-observaciones").value = rec.observations || "";
                 document.getElementById("input-compromisos").value = rec.agreements || "";
 
@@ -835,7 +640,7 @@
 
             dbRef.child('history').once('value', (snapshot) => {
                 const history = snapshot.val() ? Object.values(snapshot.val()) : [];
-                history.sort((a, b) => b.id - a.id);
+                history.sort((a, b) => b.date.localeCompare(a.date));
                 updateLatestCommentsDisplay(history);
             });
         }
@@ -868,21 +673,21 @@
                 tr.className = `border-b border-gray-100 hover:bg-slate-50 text-xs transition cursor-pointer ${isSelected ? 'row-selected' : ''}`;
 
                 let evalColor = h.percent >= 80 ? "text-green-600" : (h.percent >= 60 ? "text-yellow-600" : "text-red-600");
-                let id = Number(h.id);
+                let recordId = h.id;
 
                 tr.innerHTML = `
-                    <td class="py-1.5 text-left pl-1 font-medium text-gray-600" onclick="viewEvaluation(${id})">
+                    <td class="py-1.5 text-left pl-1 font-medium text-gray-600" onclick="viewEvaluation('${recordId}')">
                         ${esc(h.date)}
                         ${h.evaluator ? `<span class="block text-[9px] text-gray-400 truncate max-w-[90px]">${esc(h.evaluator)}</span>` : ''}
                     </td>
-                    <td class="py-1.5 font-bold" onclick="viewEvaluation(${id})">${esc(h.gmbPercent)}%</td>
-                    <td class="py-1.5 font-semibold" onclick="viewEvaluation(${id})">${esc(h.total)}/15 (${esc(h.percent)}%)</td>
-                    <td class="py-1.5" onclick="viewEvaluation(${id})">${esc(h.emoji)} <span class="${evalColor} font-bold">${esc(h.label)}</span></td>
+                    <td class="py-1.5 font-bold" onclick="viewEvaluation('${recordId}')">${esc(h.gmbPercent)}%</td>
+                    <td class="py-1.5 font-semibold" onclick="viewEvaluation('${recordId}')">${esc(h.total)}/15 (${esc(h.percent)}%)</td>
+                    <td class="py-1.5" onclick="viewEvaluation('${recordId}')">${esc(h.emoji)} <span class="${evalColor} font-bold">${esc(h.label)}</span></td>
                     <td class="py-1.5 text-center no-print">
-                        <button onclick="viewEvaluation(${id})" class="text-blue-600 hover:text-blue-800 p-0.5 mr-1" title="Ver campos de esta evaluación">
+                        <button onclick="viewEvaluation('${recordId}')" class="text-blue-600 hover:text-blue-800 p-0.5 mr-1" title="Ver campos de esta evaluación">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button onclick="deleteEvaluation(${id})" class="text-red-500 hover:text-red-700 p-0.5" title="Eliminar evaluación">
+                        <button onclick="deleteEvaluation('${recordId}')" class="text-red-500 hover:text-red-700 p-0.5" title="Eliminar evaluación">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>
@@ -894,8 +699,6 @@
         function exportToPDF() {
             window.print();
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
