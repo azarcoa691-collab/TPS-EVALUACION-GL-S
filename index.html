@@ -361,7 +361,6 @@
 
             if(dbRef) dbRef.off();
 
-            // Ruta limpia compatible conservando guiones bajos estándar
             const safeKey = currentGL.replace(/\s+/g, '_');
             dbRef = db.ref(`evaluaciones_fmds/${safeKey}`);
 
@@ -376,14 +375,8 @@
                 }
                 updateRoadmapUI();
 
-                // Soporte dual: convierte historial tanto si usa claves de Firebase (.push) como si usa marcas de tiempo numéricas antiguas
-                let history = [];
-                if (data.history) {
-                    history = Object.entries(data.history).map(([key, val]) => {
-                        return { ...val, id: val.id || key };
-                    });
-                }
-                history.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+                const history = data.history ? Object.values(data.history) : [];
+                history.sort((a, b) => b.id - a.id);
                 renderHistoryList(history);
 
                 if(!viewingEvaluationId) {
@@ -557,9 +550,7 @@
             let obsVal = document.getElementById("input-observaciones").value.trim();
             let agreVal = document.getElementById("input-compromisos").value.trim();
 
-            let newRecordRef = dbRef.child('history').push();
-            let newRecordId = newRecordRef.key;
-
+            let newRecordId = Date.now();
             let newRecord = {
                 id: newRecordId,
                 date: dateStr,
@@ -575,7 +566,7 @@
                 roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
             };
 
-            newRecordRef.set(newRecord).then(() => {
+            dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
                 resetFormInputs();
                 resetToNewEvaluation();
                 alert(`Evaluación guardada y sincronizada en la nube para ${currentGL}.`);
@@ -644,13 +635,8 @@
             });
 
             dbRef.child('history').once('value', (snapshot) => {
-                let history = [];
-                if (snapshot.val()) {
-                    history = Object.entries(snapshot.val()).map(([key, val]) => {
-                        return { ...val, id: val.id || key };
-                    });
-                }
-                history.sort((a, b) => String(b.id).localeCompare(String(a.id)));
+                const history = snapshot.val() ? Object.values(snapshot.val()) : [];
+                history.sort((a, b) => b.id - a.id);
                 updateLatestCommentsDisplay(history);
             });
         }
@@ -683,21 +669,21 @@
                 tr.className = `border-b border-gray-100 hover:bg-slate-50 text-xs transition cursor-pointer ${isSelected ? 'row-selected' : ''}`;
 
                 let evalColor = h.percent >= 80 ? "text-green-600" : (h.percent >= 60 ? "text-yellow-600" : "text-red-600");
-                let recordId = h.id;
+                let id = Number(h.id);
 
                 tr.innerHTML = `
-                    <td class="py-1.5 text-left pl-1 font-medium text-gray-600" onclick="viewEvaluation('${recordId}')">
+                    <td class="py-1.5 text-left pl-1 font-medium text-gray-600" onclick="viewEvaluation(${id})">
                         ${esc(h.date)}
                         ${h.evaluator ? `<span class="block text-[9px] text-gray-400 truncate max-w-[90px]">${esc(h.evaluator)}</span>` : ''}
                     </td>
-                    <td class="py-1.5 font-bold" onclick="viewEvaluation('${recordId}')">${esc(h.gmbPercent)}%</td>
-                    <td class="py-1.5 font-semibold" onclick="viewEvaluation('${recordId}')">${esc(h.total)}/15 (${esc(h.percent)}%)</td>
-                    <td class="py-1.5" onclick="viewEvaluation('${recordId}')">${esc(h.emoji)} <span class="${evalColor} font-bold">${esc(h.label)}</span></td>
+                    <td class="py-1.5 font-bold" onclick="viewEvaluation(${id})">${esc(h.gmbPercent)}%</td>
+                    <td class="py-1.5 font-semibold" onclick="viewEvaluation(${id})">${esc(h.total)}/15 (${esc(h.percent)}%)</td>
+                    <td class="py-1.5" onclick="viewEvaluation(${id})">${esc(h.emoji)} <span class="${evalColor} font-bold">${esc(h.label)}</span></td>
                     <td class="py-1.5 text-center no-print">
-                        <button onclick="viewEvaluation('${recordId}')" class="text-blue-600 hover:text-blue-800 p-0.5 mr-1" title="Ver campos de esta evaluación">
+                        <button onclick="viewEvaluation(${id})" class="text-blue-600 hover:text-blue-800 p-0.5 mr-1" title="Ver campos de esta evaluación">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button onclick="deleteEvaluation('${recordId}')" class="text-red-500 hover:text-red-700 p-0.5" title="Eliminar evaluación">
+                        <button onclick="deleteEvaluation(${id})" class="text-red-500 hover:text-red-700 p-0.5" title="Eliminar evaluación">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>
