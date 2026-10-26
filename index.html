@@ -412,7 +412,6 @@
                 selector.appendChild(opt);
             });
 
-            // Poblar selector de evaluadores
             const dropdownEval = document.getElementById("select-evaluador-dropdown");
             dropdownEval.innerHTML = '<option value="">-- Seleccionar Evaluador --</option>';
             evaluadoresList.forEach(evalName => {
@@ -422,7 +421,6 @@
                 dropdownEval.appendChild(opt);
             });
 
-            // Poblar selector de asistencia con los GLs
             const dropdownAsist = document.getElementById("select-asistencia-dropdown");
             dropdownAsist.innerHTML = '<option value="">-- Seleccionar Group Leader --</option>';
             groupLeaders.forEach(gl => {
@@ -436,7 +434,6 @@
             renderRoadmap();
             renderEvaluacion();
             loadGL();
-            updateAreasProgressOverview();
         }
 
         function changeGL() {
@@ -764,8 +761,10 @@
             dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
                 resetFormInputs();
                 resetToNewEvaluation();
+                alert("¡Evaluación guardada con éxito en la nube!");
             }).catch(err => {
                 console.error("Error al guardar en Firebase:", err);
+                alert("Ocurrió un error al guardar en la nube.");
             });
         }
 
@@ -823,15 +822,6 @@
             viewingEvaluationId = null;
             document.getElementById("view-mode-banner").classList.add("hidden");
             resetFormInputs();
-
-            dbRef.child('roadmap').once('value', (snapshot) => {
-                if(snapshot.exists()) {
-                    roadmapData = snapshot.val();
-                } else {
-                    roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
-                }
-                updateRoadmapUI();
-            });
 
             dbRef.child('history').once('value', (snapshot) => {
                 const history = snapshot.val() ? Object.values(snapshot.val()) : [];
