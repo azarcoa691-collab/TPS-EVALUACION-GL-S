@@ -361,8 +361,8 @@
 
             if(dbRef) dbRef.off();
 
-            // Limpieza robusta de la ruta para Firebase (remueve espacios y caracteres especiales)
-            const safeKey = currentGL.trim().replace(/[^a-zA-Z0-9_]/g, '_');
+            // Ruta limpia compatible conservando guiones bajos estándar
+            const safeKey = currentGL.replace(/\s+/g, '_');
             dbRef = db.ref(`evaluaciones_fmds/${safeKey}`);
 
             dbRef.on('value', (snapshot) => {
@@ -376,8 +376,14 @@
                 }
                 updateRoadmapUI();
 
-                const history = data.history ? Object.values(data.history) : [];
-                history.sort((a, b) => b.id - a.id);
+                // Soporte dual: convierte historial tanto si usa claves de Firebase (.push) como si usa marcas de tiempo numéricas antiguas
+                let history = [];
+                if (data.history) {
+                    history = Object.entries(data.history).map(([key, val]) => {
+                        return { ...val, id: val.id || key };
+                    });
+                }
+                history.sort((a, b) => String(b.id).localeCompare(String(a.id)));
                 renderHistoryList(history);
 
                 if(!viewingEvaluationId) {
@@ -551,7 +557,6 @@
             let obsVal = document.getElementById("input-observaciones").value.trim();
             let agreVal = document.getElementById("input-compromisos").value.trim();
 
-            // Usar push() de Firebase en lugar de Date.now() fijo para evitar colisiones de ID
             let newRecordRef = dbRef.child('history').push();
             let newRecordId = newRecordRef.key;
 
@@ -639,8 +644,13 @@
             });
 
             dbRef.child('history').once('value', (snapshot) => {
-                const history = snapshot.val() ? Object.values(snapshot.val()) : [];
-                history.sort((a, b) => b.date.localeCompare(a.date));
+                let history = [];
+                if (snapshot.val()) {
+                    history = Object.entries(snapshot.val()).map(([key, val]) => {
+                        return { ...val, id: val.id || key };
+                    });
+                }
+                history.sort((a, b) => String(b.id).localeCompare(String(a.id)));
                 updateLatestCommentsDisplay(history);
             });
         }
