@@ -4,54 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil y Seguimiento de Entrenamiento - FMDS</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Firebase SDKs servidos por Firebase Hosting. init.js se configura solo -->
-    <script src="/__/firebase/9.23.0/firebase-app-compat.js"></script>
-    <script src="/__/firebase/9.23.0/firebase-database-compat.js"></script>
-    <script src="/__/firebase/init.js"></script>
+    
+    <!-- Firebase SDKs (Compatibles con Web Modular) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
         body { background-color: #f3f4f6; color: #1e293b; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .bg-navy { background-color: #0b132b; }
         .text-navy { color: #0b132b; }
         .card-header { background-color: #1e293b; color: white; padding: 0.2rem 0.8rem; display: inline-block; font-size: 0.75rem; font-weight: bold; border-bottom-right-radius: 6px; border-top-left-radius: 4px;}
-
+        
+        /* Círculos de estado */
         .status-dot { width: 20px; height: 20px; border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.2s; border: 2px solid #cbd5e1; }
-        .status-0 { background-color: #e2e8f0; }
-        .status-1 { background-color: #ef4444; border-color: #b91c1c; }
-        .status-2 { background-color: #f59e0b; border-color: #b45309; }
-        .status-3 { background-color: #10b981; border-color: #047857; }
-
+        .status-0 { background-color: #e2e8f0; } /* Gris - 0% */
+        .status-1 { background-color: #ef4444; border-color: #b91c1c; } /* Rojo - 25% */
+        .status-2 { background-color: #f59e0b; border-color: #b45309; } /* Naranja - 50% */
+        .status-3 { background-color: #10b981; border-color: #047857; } /* Verde - 100% */
+        
+        /* Gráficas de Dona */
         .donut-chart { position: relative; width: 85px; height: 85px; border-radius: 50%; background: conic-gradient(#10b981 0%, #e2e8f0 0%); display: flex; align-items: center; justify-content: center; margin: 0 auto; }
         .donut-inner { width: 62px; height: 62px; border-radius: 50%; background-color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0 0 4px rgba(0,0,0,0.1);}
-
+        
+        /* Botones de Evaluación */
         .eval-btn { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 11px;}
         .eval-btn.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
         .row-selected { background-color: #eff6ff !important; border-left: 3px solid #3b82f6; }
 
-        @page { size: letter portrait; margin: 4mm; }
+        /* REGLAS ESPECIALES PARA AJUSTAR A 1 SOLA PÁGINA VERTICAL (PORTRAIT) */
+        @page {
+            size: letter portrait;
+            margin: 4mm;
+        }
 
         @media print {
             header, #view-mode-banner, .no-print, button { display: none !important; }
             html, body {
-                background-color: white !important; padding: 0 !important; margin: 0 !important;
-                -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
+                background-color: white !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
                 font-size: 9.5px !important;
             }
-            #pdf-content {
-                box-shadow: none !important; padding: 0 !important; margin: 0 !important;
-                width: 100% !important; max-width: 100% !important; background: white !important;
-                gap: 8px !important; zoom: 0.74;
+            #pdf-content { 
+                box-shadow: none !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                width: 100% !important; 
+                max-width: 100% !important; 
+                background: white !important;
+                gap: 8px !important;
+                zoom: 0.74;
             }
             .p-4, .p-3 { padding: 8px !important; }
             .pt-8, .pt-7 { padding-top: 30px !important; }
             .mt-6, .mt-4, .mt-2 { margin-top: 4px !important; }
             .mb-4, .mb-2 { margin-bottom: 2px !important; }
-            textarea, input[type="text"] { border: none !important; resize: none !important; background: transparent !important; padding: 0 !important; }
-            .overflow-y-auto { max-height: none !important; overflow: visible !important; }
-            .page-break-avoid { page-break-inside: avoid !important; break-inside: avoid !important; }
+            
+            textarea, input[type="text"] {
+                border: none !important;
+                resize: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+            .overflow-y-auto {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            .page-break-avoid {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
         }
     </style>
 </head>
@@ -64,10 +92,13 @@
             <button onclick="exportToPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold transition shadow flex items-center gap-2">
                 <i class="fas fa-file-pdf text-sm"></i> Imprimir / Guardar PDF (1 Página)
             </button>
-            <select id="gl-selector" class="bg-white text-navy px-3 py-1.5 rounded font-semibold border-none outline-none cursor-pointer text-xs" onchange="changeGL()"></select>
+            <select id="gl-selector" class="bg-white text-navy px-3 py-1.5 rounded font-semibold border-none outline-none cursor-pointer text-xs" onchange="changeGL()">
+                <!-- Generado dinámicamente -->
+            </select>
         </div>
     </header>
 
+    <!-- Banner Modo Inspección de Histórico -->
     <div id="view-mode-banner" class="hidden bg-amber-500 text-white px-6 py-2 text-xs font-bold flex justify-between items-center shadow-inner no-print">
         <span><i class="fas fa-eye mr-2"></i> CONSULTANDO EVALUACIÓN PASADA DEL <span id="view-mode-date">--</span></span>
         <button onclick="resetToNewEvaluation()" class="bg-white text-amber-800 px-3 py-1 rounded text-xs font-bold hover:bg-amber-100 transition shadow">
@@ -75,9 +106,10 @@
         </button>
     </div>
 
+    <!-- CONTENEDOR PRINCIPAL IMPRIMIBLE -->
     <div id="pdf-content" class="max-w-5xl mx-auto mt-4 px-3 grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 rounded-lg shadow-sm">
 
-        <!-- 1. PERFIL -->
+        <!-- 1. PERFIL DEL GROUP LEADER -->
         <div class="bg-white border rounded shadow-sm md:col-span-2 relative page-break-avoid">
             <div class="card-header absolute top-0 left-0">1. PERFIL DEL GROUP LEADER</div>
             <div class="p-4 pt-8 flex flex-row gap-4 items-center">
@@ -104,7 +136,7 @@
             </div>
         </div>
 
-        <!-- 2. OBJETIVO -->
+        <!-- 2. OBJETIVO DEL ENTRENAMIENTO -->
         <div class="bg-white border rounded shadow-sm relative page-break-avoid">
             <div class="card-header absolute top-0 left-0">2. OBJETIVO DEL ENTRENAMIENTO</div>
             <div class="p-4 pt-8 text-gray-600 text-[11px] italic text-justify leading-relaxed">
@@ -112,7 +144,7 @@
             </div>
         </div>
 
-        <!-- 3. ROADMAP -->
+        <!-- 3. ROADMAP DE APRENDIZAJE -->
         <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid">
             <div class="card-header absolute top-0 left-0">3. ROADMAP DE APRENDIZAJE - GMB</div>
             <div class="p-4 pt-8">
@@ -161,7 +193,8 @@
 
         <!-- EVALUACIÓN E HISTORIAL -->
         <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-
+            
+            <!-- EVALUACIÓN DEL GL -->
             <div class="bg-white border rounded shadow-sm relative page-break-avoid">
                 <div class="card-header absolute top-0 left-0">4. EVALUACIÓN DEL GL (REVISIÓN)</div>
                 <div class="p-3 pt-7">
@@ -210,6 +243,7 @@
                 </div>
             </div>
 
+            <!-- HISTORIAL -->
             <div class="bg-white border rounded shadow-sm relative page-break-avoid">
                 <div class="card-header absolute top-0 left-0">5. HISTORIAL Y TENDENCIA DE MEJORA</div>
                 <div class="p-3 pt-7">
@@ -231,9 +265,10 @@
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <!-- 6. RESUMEN -->
+        <!-- RESUMEN GENERAL -->
         <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid mt-1">
             <div class="card-header absolute top-0 left-0">6. RESUMEN GENERAL DEL ENTRENAMIENTO (PROCESO POR COMPETENCIA)</div>
             <div class="p-3 pt-7 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
@@ -279,7 +314,20 @@
     </div>
 
     <script>
-        // --- FIREBASE ---
+        // --- CONFIGURACIÓN DE FIREBASE ---
+        // Reemplaza estos datos con los de tu consola de Firebase
+        const firebaseConfig = {
+            apiKey: "TU_API_KEY",
+            authDomain: "tu-proyecto.firebaseapp.com",
+            databaseURL: "https://tu-proyecto-default-rtdb.firebaseio.com",
+            projectId: "tu-proyecto",
+            storageBucket: "tu-proyecto.appspot.com",
+            messagingSenderId: "TU_SENDER_ID",
+            appId: "TU_APP_ID"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         const groupLeaders = [
@@ -311,20 +359,10 @@
         ];
 
         let currentGL = groupLeaders[0].name;
-        let roadmapData = {};
+        let roadmapData = {}; 
         let evalData = [0,0,0,0,0];
         let viewingEvaluationId = null;
         let dbRef = null;
-
-        // Escapa texto antes de insertarlo como HTML
-        function esc(s) {
-            return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        }
-
-        // --- INICIALIZACIÓN DIRECTA ---
-        window.addEventListener('DOMContentLoaded', () => {
-            init();
-        });
 
         function init() {
             const selector = document.getElementById("gl-selector");
@@ -335,7 +373,7 @@
                 opt.textContent = gl.name;
                 selector.appendChild(opt);
             });
-            currentGL = groupLeaders[0].name;
+            
             renderRoadmap();
             renderEvaluacion();
             loadGL();
@@ -343,67 +381,72 @@
 
         function changeGL() {
             currentGL = document.getElementById("gl-selector").value;
-            loadGL();
             resetToNewEvaluation();
+            loadGL();
         }
 
         function loadGL() {
             const gl = groupLeaders.find(g => g.name === currentGL);
             document.getElementById("gl-name").textContent = gl.name;
             document.getElementById("gl-area").textContent = gl.area;
-
+            
             const imgEl = document.getElementById("gl-photo");
             const fallbackEl = document.getElementById("gl-photo-fallback");
+            
             imgEl.style.display = 'block';
             fallbackEl.style.display = 'none';
             imgEl.src = gl.defaultPhoto;
             fallbackEl.textContent = gl.name;
 
+            // Limpiar listener anterior si existe
             if(dbRef) dbRef.off();
 
+            // Referencia segura en Firebase (reemplazando espacios por guiones bajos)
             const safeKey = currentGL.replace(/\s+/g, '_');
             dbRef = db.ref(`evaluaciones_fmds/${safeKey}`);
 
             dbRef.on('value', (snapshot) => {
                 const data = snapshot.val() || {};
-
+                
+                // Cargar Roadmap guardado o reiniciar
                 if(data.roadmap) {
                     roadmapData = data.roadmap;
                 } else {
                     roadmapData = {};
                     roadmapTemas.forEach(t => { roadmapData[t.id] = [0,0,0,0]; });
                 }
-                updateRoadmapUI();
 
+                updateRoadmapUI();
+                
+                // Cargar Historial
                 const history = data.history ? Object.values(data.history) : [];
+                // Ordenar por ID descendiente (más reciente primero)
                 history.sort((a, b) => b.id - a.id);
                 renderHistoryList(history);
-
+                
                 if(!viewingEvaluationId) {
                     updateLatestCommentsDisplay(history);
                 }
-            }, (err) => {
-                console.error("Error de lectura:", err);
             });
 
-            evalData = [0,0,0,0,0];
+            evalData = [0,0,0,0,0]; 
             updateEvalUI();
         }
 
         function renderRoadmap() {
             const tbody = document.getElementById("roadmap-body");
             tbody.innerHTML = "";
-
+            
             roadmapTemas.forEach((tema) => {
                 roadmapData[tema.id] = [0,0,0,0];
-
+                
                 let tr = document.createElement("tr");
                 tr.className = "border-b hover:bg-slate-50";
-
+                
                 let tdName = `<td class="py-2 text-left font-semibold text-gray-700">
                                 <i class="fas ${tema.icon} ${tema.color} w-5 text-center mr-1"></i> ${tema.name}
                               </td>`;
-
+                
                 let dots = "";
                 for(let i=0; i<4; i++){
                     dots += `<td class="py-2"><div class="status-dot status-0 mx-auto" onclick="toggleDot('${tema.id}', ${i})" id="dot-${tema.id}-${i}"></div></td>`;
@@ -417,7 +460,7 @@
                                         <span id="pct-${tema.id}" class="font-bold text-xs w-8">0%</span>
                                     </div>
                                   </td>`;
-
+                
                 tr.innerHTML = tdName + dots + tdProgress;
                 tbody.appendChild(tr);
             });
@@ -426,9 +469,9 @@
         function toggleDot(temaId, colIndex) {
             let currentVal = roadmapData[temaId][colIndex];
             roadmapData[temaId][colIndex] = currentVal === 3 ? 0 : currentVal + 1;
-            dbRef.child('roadmap').set(roadmapData).catch(err => {
-                console.error(err);
-            });
+            
+            // Sincronizar roadmap directamente con Firebase
+            dbRef.child('roadmap').set(roadmapData);
             updateRoadmapUI();
         }
 
@@ -441,12 +484,12 @@
                 roadmapData[tema.id].forEach((val, i) => {
                     let dot = document.getElementById(`dot-${tema.id}-${i}`);
                     if(dot) dot.className = `status-dot status-${val} mx-auto`;
-
+                    
                     if(val === 1) rowSum += 25;
                     if(val === 2) rowSum += 50;
                     if(val === 3) rowSum += 100;
                 });
-
+                
                 let pct = Math.round(rowSum / 4);
                 let bar = document.getElementById(`bar-${tema.id}`);
                 let pctText = document.getElementById(`pct-${tema.id}`);
@@ -490,7 +533,7 @@
             evalCriterios.forEach((_, index) => {
                 let btns = document.querySelectorAll(`.eval-btn-${index}`);
                 btns.forEach(b => b.classList.remove("selected"));
-
+                
                 if(evalData[index] > 0) {
                     btns[evalData[index]-1].classList.add("selected");
                     total += evalData[index];
@@ -500,7 +543,7 @@
 
             let pct = Math.round((total / 15) * 100);
             document.getElementById("eval-total").textContent = `${total} / 15`;
-
+            
             let perfLabel = "NO EVALUADO";
             let emoji = "😐";
             if (answered > 0) {
@@ -514,7 +557,7 @@
 
             let pctEl = document.getElementById("eval-percent");
             pctEl.textContent = `${pct}%`;
-
+            
             if (perfLabel === "EXCELENTE") {
                 pctEl.className = "text-xs font-bold text-green-600";
                 document.getElementById("eval-label").className = "font-bold text-xs text-green-600";
@@ -566,6 +609,7 @@
                 roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
             };
 
+            // Guardar en Firebase (crea un nodo con la fecha/ID exacto)
             dbRef.child(`history/${newRecordId}`).set(newRecord).then(() => {
                 resetFormInputs();
                 resetToNewEvaluation();
@@ -624,7 +668,8 @@
             viewingEvaluationId = null;
             document.getElementById("view-mode-banner").classList.add("hidden");
             resetFormInputs();
-
+            
+            // Recargar roadmap actual desde Firebase
             dbRef.child('roadmap').once('value', (snapshot) => {
                 if(snapshot.exists()) {
                     roadmapData = snapshot.val();
@@ -656,7 +701,7 @@
 
         function renderHistoryList(history) {
             const tbody = document.getElementById("history-body");
-
+            
             if(!history || history.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="py-3 text-gray-400 italic text-xs">No hay evaluaciones registradas</td></tr>`;
                 return;
@@ -667,23 +712,22 @@
                 let tr = document.createElement("tr");
                 let isSelected = viewingEvaluationId === h.id;
                 tr.className = `border-b border-gray-100 hover:bg-slate-50 text-xs transition cursor-pointer ${isSelected ? 'row-selected' : ''}`;
-
+                
                 let evalColor = h.percent >= 80 ? "text-green-600" : (h.percent >= 60 ? "text-yellow-600" : "text-red-600");
-                let id = Number(h.id);
 
                 tr.innerHTML = `
-                    <td class="py-1.5 text-left pl-1 font-medium text-gray-600" onclick="viewEvaluation(${id})">
-                        ${esc(h.date)}
-                        ${h.evaluator ? `<span class="block text-[9px] text-gray-400 truncate max-w-[90px]">${esc(h.evaluator)}</span>` : ''}
+                    <td class="py-1.5 text-left pl-1 font-medium text-gray-600" onclick="viewEvaluation(${h.id})">
+                        ${h.date}
+                        ${h.evaluator ? `<span class="block text-[9px] text-gray-400 truncate max-w-[90px]">${h.evaluator}</span>` : ''}
                     </td>
-                    <td class="py-1.5 font-bold" onclick="viewEvaluation(${id})">${esc(h.gmbPercent)}%</td>
-                    <td class="py-1.5 font-semibold" onclick="viewEvaluation(${id})">${esc(h.total)}/15 (${esc(h.percent)}%)</td>
-                    <td class="py-1.5" onclick="viewEvaluation(${id})">${esc(h.emoji)} <span class="${evalColor} font-bold">${esc(h.label)}</span></td>
+                    <td class="py-1.5 font-bold" onclick="viewEvaluation(${h.id})">${h.gmbPercent}%</td>
+                    <td class="py-1.5 font-semibold" onclick="viewEvaluation(${h.id})">${h.total}/15 (${h.percent}%)</td>
+                    <td class="py-1.5" onclick="viewEvaluation(${h.id})">${h.emoji || ''} <span class="${evalColor} font-bold">${h.label || ''}</span></td>
                     <td class="py-1.5 text-center no-print">
-                        <button onclick="viewEvaluation(${id})" class="text-blue-600 hover:text-blue-800 p-0.5 mr-1" title="Ver campos de esta evaluación">
+                        <button onclick="viewEvaluation(${h.id})" class="text-blue-600 hover:text-blue-800 p-0.5 mr-1" title="Ver campos de esta evaluación">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button onclick="deleteEvaluation(${id})" class="text-red-500 hover:text-red-700 p-0.5" title="Eliminar evaluación">
+                        <button onclick="deleteEvaluation(${h.id})" class="text-red-500 hover:text-red-700 p-0.5" title="Eliminar evaluación">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>
@@ -695,6 +739,8 @@
         function exportToPDF() {
             window.print();
         }
+
+        window.onload = init;
     </script>
 </body>
 </html>
