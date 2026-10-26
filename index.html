@@ -363,7 +363,8 @@
             { name: "Luis Ramirez", area: "SOLDADURA", defaultPhoto: "LUIS RAMIREZ.png" },
             { name: "Ivan Hernandez", area: "SOLDADURA", defaultPhoto: "IVAN HERNANDEZ.png" },
             { name: "Omar Trujillo", area: "SOLDADURA", defaultPhoto: "OMAR TRUJILLO.png" },
-            { name: "Arturo Teniente", area: "SOLDADURA", defaultPhoto: "ARTURO TENIENTE.png" }
+            { name: "Arturo Teniente", area: "SOLDADURA", defaultPhoto: "ARTURO TENIENTE.png" },
+            { name: "Saul Medrano", area: "SOLDADURA", defaultPhoto: "SAUL MEDRANO.png" }
         ];
 
         const evaluadoresList = [
@@ -739,22 +740,25 @@
             if(!asistenciaVal) asistenciaVal = "Sin especificar";
 
             let obsVal = document.getElementById("input-observaciones").value.trim();
+            if(!obsVal) obsVal = "Sin observaciones";
+
             let agreVal = document.getElementById("input-compromisos").value.trim();
+            if(!agreVal) agreVal = "Sin acuerdos";
 
             let newRecordId = Date.now();
             let newRecord = {
-                id: newRecordId,
-                date: dateStr,
-                gmbPercent: currentGMB,
-                total: total,
-                percent: pct,
-                label: perfLabel,
-                emoji: emoji,
-                evaluator: evaluatorVal,
-                asistencia: asistenciaVal,
-                observations: obsVal,
-                agreements: agreVal,
-                evalDataSnapshot: [...evalData],
+                id: Number(newRecordId),
+                date: String(dateStr),
+                gmbPercent: Number(currentGMB),
+                total: Number(total),
+                percent: Number(pct),
+                label: String(perfLabel),
+                emoji: String(emoji),
+                evaluator: String(evaluatorVal),
+                asistencia: String(asistenciaVal),
+                observations: String(obsVal),
+                agreements: String(agreVal),
+                evalDataSnapshot: evalData.map(v => Number(v)),
                 roadmapSnapshot: JSON.parse(JSON.stringify(roadmapData))
             };
 
@@ -809,8 +813,8 @@
                 selectedAsistenciaList = rec.asistencia && rec.asistencia !== "Sin especificar" ? rec.asistencia.split(" / ") : [];
                 updateAsistenciaDisplay();
 
-                document.getElementById("input-observaciones").value = rec.observations || "";
-                document.getElementById("input-compromisos").value = rec.agreements || "";
+                document.getElementById("input-observaciones").value = rec.observations !== "Sin observaciones" ? rec.observations : "";
+                document.getElementById("input-compromisos").value = rec.agreements !== "Sin acuerdos" ? rec.agreements : "";
 
                 document.getElementById("disp-evaluador").textContent = rec.evaluator || "Sin registro";
                 document.getElementById("disp-observaciones").textContent = rec.observations || "Sin observaciones";
