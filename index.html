@@ -375,6 +375,7 @@
     <script>
         // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
+            apiKey: "AIzaSyAgBEnU8HHB514D6J2draKUN9thyAufHq8", // <-- Reemplaza esto con tu API Key real de Firebase
             authDomain: "tps-evaluacion-gl-s-6c651.firebaseapp.com",
             databaseURL: "https://tps-evaluacion-gl-s-6c651-default-rtdb.firebaseio.com",
             projectId: "tps-evaluacion-gl-s-6c651",
@@ -390,7 +391,6 @@
             firebase.appCheck().activate(RECAPTCHA_SITE_KEY, true);
         }
         
-        // Inicialización correcta de auth y db al inicio
         const auth = firebase.auth();
         const db = firebase.database();
 
