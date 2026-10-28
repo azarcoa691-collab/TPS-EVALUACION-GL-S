@@ -7,8 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Firebase SDKs (compat): App + Realtime Database + App Check -->
+    <!-- Firebase SDKs (compat): App + Auth + Realtime Database + App Check -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script>
@@ -61,14 +62,52 @@
 </head>
 <body class="pb-10">
 
+    <!-- MODAL DE INICIO DE SESIÓN -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900 bg-opacity-80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="bg-navy text-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                    <i class="fas fa-lock text-xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-navy">Acceso Restringido</h2>
+                <p class="text-xs text-gray-500 mt-1">Ingresa con tu correo y contraseña corporativa de Firebase</p>
+            </div>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Correo Electrónico:</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-envelope"></i></span>
+                        <input type="email" id="login-email" required placeholder="correo@ktmex.mx" class="w-full text-xs pl-9 pr-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Contraseña:</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><i class="fas fa-key"></i></span>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full text-xs pl-9 pr-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div id="login-error" class="text-red-500 text-xs text-center font-semibold hidden"></div>
+                <button type="submit" class="w-full bg-navy text-white py-2.5 rounded-lg hover:bg-slate-800 transition font-bold text-xs shadow-md">
+                    <i class="fas fa-sign-in-alt mr-1.5"></i> Iniciar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Header Principal -->
-    <header class="bg-navy text-white p-3 flex flex-wrap justify-between items-center gap-4 shadow-md sticky top-0 z-50 no-print">
+    <header class="bg-navy text-white p-3 flex flex-wrap justify-between items-center gap-4 shadow-md sticky top-0 z-40 no-print">
         <h1 class="text-lg font-bold uppercase tracking-wider">Perfil y Seguimiento de Entrenamiento - FMDS</h1>
         <div class="flex items-center gap-3">
+            <span id="user-email-display" class="text-xs text-blue-200 italic hidden sm:inline"></span>
             <button onclick="exportToPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold transition shadow flex items-center gap-2">
                 <i class="fas fa-file-pdf text-sm"></i> Imprimir / Guardar PDF (1 Página)
             </button>
             <select id="gl-selector" class="bg-white text-navy px-3 py-1.5 rounded font-semibold border-none outline-none cursor-pointer text-xs" onchange="changeGL()"></select>
+            <button onclick="logout()" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1.5 rounded text-xs font-bold transition" title="Cerrar Sesión">
+                <i class="fas.fa-sign-out-alt"></i> Salir
+            </button>
         </div>
     </header>
 
@@ -215,7 +254,6 @@
                     </table>
 
                     <div class="mt-2 border-t pt-2 space-y-1.5 text-xs">
-                        <!-- Evaluadores -->
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Evaluador(es):</label>
                             <div class="flex gap-1 mb-1">
@@ -233,7 +271,6 @@
                             <input type="hidden" id="input-evaluador" value="">
                         </div>
 
-                        <!-- Asistencia de GLs -->
                         <div>
                             <label class="block text-[10px] font-bold text-gray-600 uppercase mb-1">Asistencia de GL(s):</label>
                             <div class="flex gap-1 mb-1">
@@ -353,6 +390,7 @@
             firebase.appCheck().activate(RECAPTCHA_SITE_KEY, true);
         }
         const db = firebase.database();
+        const auth = firebase.auth();
 
         const groupLeaders = [
             { name: "Angel Serrano", area: "ESTAMPADO", defaultPhoto: "ANGEL SERRANO.png" },
@@ -399,6 +437,42 @@
         let selectedEvaluatorsList = [];
         let selectedAsistenciaList = [];
 
+        // --- CONTROL DE AUTENTICACIÓN ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById("login-email").value.trim();
+            const password = document.getElementById("login-password").value.trim();
+            const errorDiv = document.getElementById("login-error");
+            errorDiv.classList.add("hidden");
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    document.getElementById("login-modal").style.display = "none";
+                    document.getElementById("user-email-display").textContent = userCredential.user.email;
+                    initApp();
+                })
+                .catch((error) => {
+                    errorDiv.textContent = "Correo o contraseña incorrectos.";
+                    errorDiv.classList.remove("hidden");
+                });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                location.reload();
+            });
+        }
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById("login-modal").style.display = "none";
+                document.getElementById("user-email-display").textContent = user.email;
+                initApp();
+            } else {
+                document.getElementById("login-modal").style.display = "flex";
+            }
+        });
+
         function esc(s) {
             return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
         }
@@ -407,7 +481,7 @@
             return name.replace(/[\s\.\#\$\/\[\]]/g, '_');
         }
 
-        function init() {
+        function initApp() {
             const selector = document.getElementById("gl-selector");
             selector.innerHTML = "";
             groupLeaders.forEach(gl => {
@@ -502,8 +576,8 @@
                 tr.className = "border-b hover:bg-slate-50";
 
                 let tdName = `<td class="py-2 text-left font-semibold text-gray-700">
-                                <i class="fas ${tema.icon} ${tema.color} w-5 text-center mr-1"></i> ${tema.name}
-                              </td>`;
+                            <i class="fas ${tema.icon} ${tema.color} w-5 text-center mr-1"></i> ${tema.name}
+                            </td>`;
 
                 let dots = "";
                 for(let i=0; i<4; i++){
@@ -511,13 +585,13 @@
                 }
 
                 let tdProgress = `<td class="py-2 text-right">
-                                    <div class="flex items-center justify-end">
-                                        <div class="w-full bg-gray-200 rounded-full h-2 mr-2 overflow-hidden flex">
-                                            <div id="bar-${tema.id}" class="bg-navy h-2 rounded-full" style="width: 0%"></div>
-                                        </div>
-                                        <span id="pct-${tema.id}" class="font-bold text-xs w-8">0%</span>
+                                <div class="flex items-center justify-end">
+                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2 overflow-hidden flex">
+                                        <div id="bar-${tema.id}" class="bg-navy h-2 rounded-full" style="width: 0%"></div>
                                     </div>
-                                  </td>`;
+                                    <span id="pct-${tema.id}" class="font-bold text-xs w-8">0%</span>
+                                </div>
+                              </td>`;
 
                 tr.innerHTML = tdName + dots + tdProgress;
                 tbody.appendChild(tr);
@@ -892,8 +966,6 @@
         function exportToPDF() {
             window.print();
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
