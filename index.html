@@ -106,7 +106,7 @@
             </button>
             <select id="gl-selector" class="bg-white text-navy px-3 py-1.5 rounded font-semibold border-none outline-none cursor-pointer text-xs" onchange="changeGL()"></select>
             <button onclick="logout()" class="bg-slate-700 hover:bg-slate-600 text-white px-2.5 py-1.5 rounded text-xs font-bold transition" title="Cerrar Sesión">
-                <i class="fas.fa-sign-out-alt"></i> Salir
+                <i class="fas fa-sign-out-alt"></i> Salir
             </button>
         </div>
     </header>
@@ -389,8 +389,10 @@
         if (RECAPTCHA_SITE_KEY) {
             firebase.appCheck().activate(RECAPTCHA_SITE_KEY, true);
         }
-        const db = firebase.database();
+        
+        // Inicialización correcta de auth y db al inicio
         const auth = firebase.auth();
+        const db = firebase.database();
 
         const groupLeaders = [
             { name: "Angel Serrano", area: "ESTAMPADO", defaultPhoto: "ANGEL SERRANO.png" },
