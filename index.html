@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil y Seguimiento de Entrenamiento - FMDS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <!-- Firebase SDKs (compat): App + Auth + Realtime Database + App Check -->
@@ -120,30 +121,49 @@
 
     <div id="pdf-content" class="max-w-5xl mx-auto mt-4 px-3 grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 rounded-lg shadow-sm">
 
-        <!-- RESUMEN DE AVANCE GENERAL POR ÁREA -->
+        <!-- RESUMEN DE AVANCE GENERAL Y GRÁFICA POR ÁREA -->
         <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid no-print">
-            <div class="card-header absolute top-0 left-0">RESUMEN DE AVANCE GENERAL POR ÁREA</div>
-            <div class="p-4 pt-7 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] text-gray-500 uppercase font-bold">Área Estampado</span>
-                        <h4 id="area-estampado-text" class="text-lg font-bold text-navy">0%</h4>
+            <div class="card-header absolute top-0 left-0">RESUMEN DE AVANCE Y ESTATUS GENERAL POR ÁREA</div>
+            <div class="p-4 pt-7 space-y-4">
+                <!-- Tarjetas de Indicadores -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Estampado</span>
+                            <h4 id="area-estampado-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
+                            <span id="area-estampado-eval" class="text-[10px] text-blue-700 font-semibold block">Eval. Promedio: 0%</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="area-estampado-badge">0%</div>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="area-estampado-badge">0%</div>
+                    <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Soldadura</span>
+                            <h4 id="area-soldadura-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
+                            <span id="area-soldadura-eval" class="text-[10px] text-purple-700 font-semibold block">Eval. Promedio: 0%</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs" id="area-soldadura-badge">0%</div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Internal Logistics (IL)</span>
+                            <h4 id="area-il-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
+                            <span id="area-il-eval" class="text-[10px] text-emerald-700 font-semibold block">Eval. Promedio: 0%</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs" id="area-il-badge">0%</div>
+                    </div>
                 </div>
-                <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] text-gray-500 uppercase font-bold">Área Soldadura</span>
-                        <h4 id="area-soldadura-text" class="text-lg font-bold text-navy">0%</h4>
+
+                <!-- Gráfica General por Área -->
+                <div class="bg-slate-50 border rounded-lg p-3">
+                    <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+                        <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-chart-bar text-blue-600 mr-1.5"></i> Comparativa de Estatus por Área (Roadmap GMB vs. Evaluación Semanal)
+                        </h3>
+                        <span class="text-[10px] text-gray-400 italic">Sincronizado en tiempo real con Firebase</span>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs" id="area-soldadura-badge">0%</div>
-                </div>
-                <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] text-gray-500 uppercase font-bold">Área Internal Logistics (IL)</span>
-                        <h4 id="area-il-text" class="text-lg font-bold text-navy">0%</h4>
+                    <div class="relative w-full h-56">
+                        <canvas id="areaStatusChart"></canvas>
                     </div>
-                    <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs" id="area-il-badge">0%</div>
                 </div>
             </div>
         </div>
@@ -153,7 +173,7 @@
             <div class="card-header absolute top-0 left-0">1. PERFIL DEL GROUP LEADER</div>
             <div class="p-4 pt-8 flex flex-row gap-4 items-center">
                 <div class="w-24 h-28 bg-slate-800 text-white rounded flex items-center justify-center overflow-hidden border border-slate-300 shrink-0">
-                    <img id="gl-photo" src="" alt="Foto GL" class="w-full h-full object-contain" onerror="this.style.display='none'; document.getElementById('gl-photo-fallback').style.display='block';">
+                    <img id="gl-photo" src="" alt="Foto GL" class="w-full h-full object-contain" onerror="handlePhotoError(this)">
                     <span id="gl-photo-fallback" class="font-bold text-center px-1 text-xs" style="display: none;">Foto</span>
                 </div>
                 <div class="flex-1 w-full space-y-2 text-xs">
@@ -382,7 +402,7 @@
     <script>
         // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
-            apiKey: "AIzaSyAgBEnU8HHB514D6J2draKUN9thyAufHq8", // <-- Reemplaza esto con tu API Key real de Firebase
+            apiKey: "AIzaSyAgBEnU8HHB514D6J2draKUN9thyAufHq8",
             authDomain: "tps-evaluacion-gl-s-6c651.firebaseapp.com",
             databaseURL: "https://tps-evaluacion-gl-s-6c651-default-rtdb.firebaseio.com",
             projectId: "tps-evaluacion-gl-s-6c651",
@@ -412,9 +432,9 @@
             { name: "Omar Trujillo", area: "SOLDADURA", defaultPhoto: "OMAR TRUJILLO.png" },
             { name: "Arturo Teniente", area: "SOLDADURA", defaultPhoto: "ARTURO TENIENTE.png" },
             { name: "Saul Medrano", area: "SOLDADURA", defaultPhoto: "SAUL MEDRANO.png" },
-            { name: "Sandra Rodriguez", area: "INTERNAL LOGISTICS", defaultPhoto: "SANDRA RODRIGUEZ.png" },
-            { name: "Diana Mendoza", area: "INTERNAL LOGISTICS", defaultPhoto: "DIANA MENDOZA.png" },
-            { name: "Sandra Solano", area: "INTERNAL LOGISTICS", defaultPhoto: "SANDRA SOLANO.png" }
+            { name: "Sandra Rodriguez", area: "INTERNAL LOGISTICS", defaultPhoto: "SANDRA RODRIGUEZ.jpg" },
+            { name: "Diana Mendoza", area: "INTERNAL LOGISTICS", defaultPhoto: "DIANA MENDOZA.jpg" },
+            { name: "Sandra Solano", area: "INTERNAL LOGISTICS", defaultPhoto: "SANDRA SOLANO.jpg" }
         ];
 
         const evaluadoresList = [
@@ -446,8 +466,28 @@
         let evalData = [0,0,0,0,0];
         let viewingEvaluationId = null;
         let dbRef = null;
+        let allDataRef = null;
+        let allEvaluacionesCache = {};
+        let areaStatusChart = null;
         let selectedEvaluatorsList = [];
         let selectedAsistenciaList = [];
+
+        function handlePhotoError(imgEl) {
+            const currentSrc = imgEl.getAttribute("src") || "";
+            if (!imgEl.dataset.triedFallbackExt) {
+                imgEl.dataset.triedFallbackExt = "1";
+                if (/\.jpe?g$/i.test(currentSrc)) {
+                    imgEl.src = currentSrc.replace(/\.jpe?g$/i, ".png");
+                    return;
+                }
+                if (/\.png$/i.test(currentSrc)) {
+                    imgEl.src = currentSrc.replace(/\.png$/i, ".jpg");
+                    return;
+                }
+            }
+            imgEl.style.display = "none";
+            document.getElementById("gl-photo-fallback").style.display = "block";
+        }
 
         // --- CONTROL DE AUTENTICACIÓN ---
         function handleLogin(e) {
@@ -521,10 +561,120 @@
                 dropdownAsist.appendChild(opt);
             });
 
+            initAreaStatusChart();
+            subscribeAllEvaluations();
+
             currentGL = groupLeaders[0].name;
             renderRoadmap();
             renderEvaluacion();
             loadGL();
+        }
+
+        function calculateRoadmapPercentFromObj(roadmapObj) {
+            if (!roadmapObj) return 0;
+            let totalPctSum = 0;
+            roadmapTemas.forEach(tema => {
+                const arr = Array.isArray(roadmapObj[tema.id]) ? roadmapObj[tema.id] : [0, 0, 0, 0];
+                let rowSum = 0;
+                arr.forEach(val => {
+                    if (val === 1) rowSum += 25;
+                    if (val === 2) rowSum += 50;
+                    if (val === 3) rowSum += 100;
+                });
+                totalPctSum += Math.round(rowSum / 4);
+            });
+            return Math.round(totalPctSum / roadmapTemas.length);
+        }
+
+        function getLatestEvalPercentFromHistory(historyObj) {
+            if (!historyObj) return null;
+            const list = Object.values(historyObj);
+            if (!list.length) return null;
+            list.sort((a, b) => Number(b.id) - Number(a.id));
+            return Number(list[0].percent) || 0;
+        }
+
+        function subscribeAllEvaluations() {
+            if (allDataRef) allDataRef.off();
+            allDataRef = db.ref('evaluaciones_fmds');
+            allDataRef.on('value', (snapshot) => {
+                allEvaluacionesCache = snapshot.val() || {};
+                updateAreasProgressOverview();
+            }, (err) => {
+                console.error("Error al leer resumen global de áreas:", err);
+            });
+        }
+
+        function initAreaStatusChart() {
+            const canvas = document.getElementById("areaStatusChart");
+            if (!canvas) return;
+            if (areaStatusChart) {
+                areaStatusChart.destroy();
+            }
+
+            areaStatusChart = new Chart(canvas.getContext("2d"), {
+                type: "bar",
+                data: {
+                    labels: ["Estampado", "Soldadura", "Internal Logistics (IL)"],
+                    datasets: [
+                        {
+                            label: "Avance Roadmap GMB (%)",
+                            data: [0, 0, 0],
+                            backgroundColor: ["#2563eb", "#7c3aed", "#059669"],
+                            borderRadius: 6,
+                            barPercentage: 0.65,
+                            categoryPercentage: 0.6
+                        },
+                        {
+                            label: "Promedio Evaluación Semanal (%)",
+                            data: [0, 0, 0],
+                            backgroundColor: ["rgba(37, 99, 235, 0.35)", "rgba(124, 58, 237, 0.35)", "rgba(5, 150, 105, 0.35)"],
+                            borderColor: ["#1d4ed8", "#6d28d9", "#047857"],
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                            barPercentage: 0.65,
+                            categoryPercentage: 0.6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "top",
+                            labels: {
+                                font: { size: 11, weight: "bold" },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20,
+                                font: { size: 10 },
+                                callback: (v) => v + "%"
+                            },
+                            grid: { color: "#e2e8f0" }
+                        },
+                        x: {
+                            ticks: { font: { size: 11, weight: "bold" } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
         }
 
         function changeGL() {
@@ -540,6 +690,7 @@
 
             const imgEl = document.getElementById("gl-photo");
             const fallbackEl = document.getElementById("gl-photo-fallback");
+            delete imgEl.dataset.triedFallbackExt;
             imgEl.style.display = 'block';
             fallbackEl.style.display = 'none';
             imgEl.src = gl.defaultPhoto;
@@ -653,39 +804,65 @@
             const currentPctVal = parseInt(document.getElementById("text-gmb").textContent, 10) || 0;
             localStorage.setItem(`gmb_pct_${getSafeKey(currentGL)}`, String(currentPctVal));
 
-            let stampSum = 0, stampCount = 0;
-            let weldSum = 0, weldCount = 0;
-            let ilSum = 0, ilCount = 0;
+            const stats = {
+                "ESTAMPADO": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0 },
+                "SOLDADURA": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0 },
+                "INTERNAL LOGISTICS": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0 }
+            };
 
             groupLeaders.forEach(gl => {
-                let sKey = getSafeKey(gl.name);
-                let savedPct = localStorage.getItem(`gmb_pct_${sKey}`);
-                let val = gl.name === currentGL
-                    ? currentPctVal
-                    : (savedPct !== null ? (parseInt(savedPct, 10) || 0) : 0);
+                const sKey = getSafeKey(gl.name);
+                const glNode = allEvaluacionesCache[sKey];
+                let gmbVal = 0;
 
-                if (gl.area === "ESTAMPADO") {
-                    stampSum += val;
-                    stampCount++;
-                } else if (gl.area === "SOLDADURA") {
-                    weldSum += val;
-                    weldCount++;
-                } else if (gl.area === "INTERNAL LOGISTICS") {
-                    ilSum += val;
-                    ilCount++;
+                if (gl.name === currentGL) {
+                    gmbVal = currentPctVal;
+                } else if (glNode && glNode.roadmap) {
+                    gmbVal = calculateRoadmapPercentFromObj(glNode.roadmap);
+                } else {
+                    const savedPct = localStorage.getItem(`gmb_pct_${sKey}`);
+                    gmbVal = savedPct !== null ? (parseInt(savedPct, 10) || 0) : 0;
+                }
+
+                const latestEval = glNode && glNode.history ? getLatestEvalPercentFromHistory(glNode.history) : null;
+
+                if (stats[gl.area]) {
+                    stats[gl.area].gmbSum += gmbVal;
+                    stats[gl.area].count++;
+                    if (latestEval !== null) {
+                        stats[gl.area].evalSum += latestEval;
+                        stats[gl.area].evalCount++;
+                    }
                 }
             });
 
-            let stampAvg = stampCount > 0 ? Math.round(stampSum / stampCount) : 0;
-            let weldAvg = weldCount > 0 ? Math.round(weldSum / weldCount) : 0;
-            let ilAvg = ilCount > 0 ? Math.round(ilSum / ilCount) : 0;
+            const calcAvg = (sum, cnt) => (cnt > 0 ? Math.round(sum / cnt) : 0);
 
-            document.getElementById("area-estampado-text").textContent = `${stampAvg}%`;
-            document.getElementById("area-estampado-badge").textContent = `${stampAvg}%`;
-            document.getElementById("area-soldadura-text").textContent = `${weldAvg}%`;
-            document.getElementById("area-soldadura-badge").textContent = `${weldAvg}%`;
-            document.getElementById("area-il-text").textContent = `${ilAvg}%`;
-            document.getElementById("area-il-badge").textContent = `${ilAvg}%`;
+            const stampGmb = calcAvg(stats["ESTAMPADO"].gmbSum, stats["ESTAMPADO"].count);
+            const weldGmb = calcAvg(stats["SOLDADURA"].gmbSum, stats["SOLDADURA"].count);
+            const ilGmb = calcAvg(stats["INTERNAL LOGISTICS"].gmbSum, stats["INTERNAL LOGISTICS"].count);
+
+            const stampEval = calcAvg(stats["ESTAMPADO"].evalSum, stats["ESTAMPADO"].evalCount);
+            const weldEval = calcAvg(stats["SOLDADURA"].evalSum, stats["SOLDADURA"].evalCount);
+            const ilEval = calcAvg(stats["INTERNAL LOGISTICS"].evalSum, stats["INTERNAL LOGISTICS"].evalCount);
+
+            document.getElementById("area-estampado-text").innerHTML = `${stampGmb}% <span class="text-[10px] font-normal text-gray-500">GMB</span>`;
+            document.getElementById("area-estampado-badge").textContent = `${stampGmb}%`;
+            document.getElementById("area-estampado-eval").textContent = `Eval. Promedio: ${stampEval}%`;
+
+            document.getElementById("area-soldadura-text").innerHTML = `${weldGmb}% <span class="text-[10px] font-normal text-gray-500">GMB</span>`;
+            document.getElementById("area-soldadura-badge").textContent = `${weldGmb}%`;
+            document.getElementById("area-soldadura-eval").textContent = `Eval. Promedio: ${weldEval}%`;
+
+            document.getElementById("area-il-text").innerHTML = `${ilGmb}% <span class="text-[10px] font-normal text-gray-500">GMB</span>`;
+            document.getElementById("area-il-badge").textContent = `${ilGmb}%`;
+            document.getElementById("area-il-eval").textContent = `Eval. Promedio: ${ilEval}%`;
+
+            if (areaStatusChart) {
+                areaStatusChart.data.datasets[0].data = [stampGmb, weldGmb, ilGmb];
+                areaStatusChart.data.datasets[1].data = [stampEval, weldEval, ilEval];
+                areaStatusChart.update();
+            }
         }
 
         function renderEvaluacion() {
