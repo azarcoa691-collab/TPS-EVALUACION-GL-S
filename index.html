@@ -40,7 +40,7 @@
         @page { size: letter portrait; margin: 4mm; }
 
         @media print {
-            header, #view-mode-banner, .no-print, button { display: none !important; }
+            header, #view-mode-banner, #area-analytics-modal, .no-print, button { display: none !important; }
             html, body {
                 background-color: white !important; padding: 0 !important; margin: 0 !important;
                 -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
@@ -97,11 +97,133 @@
         </div>
     </div>
 
+    <!-- MODAL DE CONSULTA DE GRÁFICA Y ESTATUS POR ÁREA -->
+    <div id="area-analytics-modal" class="fixed inset-0 bg-slate-900 bg-opacity-75 z-50 hidden items-center justify-center p-3 sm:p-6 overflow-y-auto no-print">
+        <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full my-auto border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
+            <!-- Encabezado del Modal -->
+            <div class="bg-navy text-white px-5 py-3.5 flex flex-wrap justify-between items-center gap-3 shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <i class="fas fa-chart-pie text-emerald-400 text-base"></i>
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold uppercase tracking-wider">Estatus General por Área, Constancia y Focus Points</h2>
+                        <p class="text-[11px] text-slate-300">Consolidado en tiempo real de Estampado, Soldadura e Internal Logistics (IL)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="modal-area-filter" onchange="renderAreaAnalyticsModal()" class="bg-slate-800 text-white border border-slate-600 rounded px-2.5 py-1.5 text-xs font-semibold outline-none">
+                        <option value="ALL">Todas las Áreas</option>
+                        <option value="ESTAMPADO">Estampado</option>
+                        <option value="SOLDADURA">Soldadura</option>
+                        <option value="INTERNAL LOGISTICS">Internal Logistics (IL)</option>
+                    </select>
+                    <button onclick="closeAreaAnalyticsModal()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fas fa-times"></i> Cerrar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenido Desplazable -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs">
+                <!-- Tarjetas de Promedio por Área -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-lg border flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Estampado</span>
+                            <h4 id="area-estampado-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
+                            <span id="area-estampado-eval" class="text-[10px] text-blue-700 font-semibold block">Eval. Promedio: 0%</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="area-estampado-badge">0%</div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Soldadura</span>
+                            <h4 id="area-soldadura-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
+                            <span id="area-soldadura-eval" class="text-[10px] text-purple-700 font-semibold block">Eval. Promedio: 0%</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs" id="area-soldadura-badge">0%</div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Internal Logistics (IL)</span>
+                            <h4 id="area-il-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
+                            <span id="area-il-eval" class="text-[10px] text-emerald-700 font-semibold block">Eval. Promedio: 0%</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs" id="area-il-badge">0%</div>
+                    </div>
+                </div>
+
+                <!-- Gráfica General por Área -->
+                <div class="bg-slate-50 border rounded-lg p-3.5">
+                    <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+                        <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-chart-bar text-blue-600 mr-1.5"></i> Gráfica de Estatus por Área (Roadmap GMB vs. Evaluación Semanal)
+                        </h3>
+                        <span class="text-[10px] text-gray-500">Promedio de avance del pizarrón y calificación de revisión</span>
+                    </div>
+                    <div class="relative w-full h-56">
+                        <canvas id="areaStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sección 1 y 2: Constancia Semanal + Uso y Constancia de Herramientas en Pizarrón -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <!-- 1. Constancia de Evaluaciones (mínimo 1 por semana) -->
+                    <div class="bg-white border rounded-lg p-3.5 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                                <i class="fas fa-calendar-check text-emerald-600 mr-1.5"></i> 1. Constancia de Evaluaciones (Mín. 1 / Semana)
+                            </h3>
+                            <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold">Meta: ≥ 1 / sem</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-60 overflow-y-auto">
+                            <table class="w-full text-left border-collapse text-[11px]">
+                                <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] sticky top-0">
+                                    <tr>
+                                        <th class="py-1.5 px-2">Group Leader / Área</th>
+                                        <th class="py-1.5 px-2 text-center">Reg. / Meta</th>
+                                        <th class="py-1.5 px-2 text-center">Última Fecha</th>
+                                        <th class="py-1.5 px-2 text-center">Estatus</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="constancia-eval-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 2. Uso, Aplicación y Constancia de Herramientas en Pizarrón -->
+                    <div class="bg-white border rounded-lg p-3.5 shadow-sm">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                                <i class="fas fa-chalkboard text-purple-600 mr-1.5"></i> 2. Uso y Constancia en Pizarrón (GMB)
+                            </h3>
+                            <span class="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded font-semibold">Operación / Estandarizado</span>
+                        </div>
+                        <div class="space-y-3 max-h-60 overflow-y-auto pr-1" id="pizarron-tools-body"></div>
+                    </div>
+                </div>
+
+                <!-- 3. Resumen de Puntos o Hallazgos (Focus Point) por Área -->
+                <div class="bg-white border rounded-lg p-3.5 shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-bullseye text-amber-600 mr-1.5"></i> 3. Resumen de Hallazgos y Focus Points por Área (Auditor y GL Evaluado)
+                        </h3>
+                        <span class="text-[10px] text-gray-500">Para enfocar coaching, seguimiento y fortalecimiento</span>
+                    </div>
+                    <div id="focus-points-body" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header Principal -->
     <header class="bg-navy text-white p-3 flex flex-wrap justify-between items-center gap-4 shadow-md sticky top-0 z-40 no-print">
         <h1 class="text-lg font-bold uppercase tracking-wider">Perfil y Seguimiento de Entrenamiento - FMDS</h1>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
             <span id="user-email-display" class="text-xs text-blue-200 italic hidden sm:inline"></span>
+            <button onclick="openAreaAnalyticsModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold transition shadow flex items-center gap-1.5">
+                <i class="fas fa-chart-bar text-sm"></i> Gráfica y Estatus por Área
+            </button>
             <button onclick="exportToPDF()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold transition shadow flex items-center gap-2">
                 <i class="fas fa-file-pdf text-sm"></i> Imprimir / Guardar PDF (1 Página)
             </button>
@@ -120,53 +242,6 @@
     </div>
 
     <div id="pdf-content" class="max-w-5xl mx-auto mt-4 px-3 grid grid-cols-1 md:grid-cols-3 gap-3 bg-white p-3 rounded-lg shadow-sm">
-
-        <!-- RESUMEN DE AVANCE GENERAL Y GRÁFICA POR ÁREA -->
-        <div class="bg-white border rounded shadow-sm md:col-span-3 relative page-break-avoid no-print">
-            <div class="card-header absolute top-0 left-0">RESUMEN DE AVANCE Y ESTATUS GENERAL POR ÁREA</div>
-            <div class="p-4 pt-7 space-y-4">
-                <!-- Tarjetas de Indicadores -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Estampado</span>
-                            <h4 id="area-estampado-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
-                            <span id="area-estampado-eval" class="text-[10px] text-blue-700 font-semibold block">Eval. Promedio: 0%</span>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="area-estampado-badge">0%</div>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Soldadura</span>
-                            <h4 id="area-soldadura-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
-                            <span id="area-soldadura-eval" class="text-[10px] text-purple-700 font-semibold block">Eval. Promedio: 0%</span>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs" id="area-soldadura-badge">0%</div>
-                    </div>
-                    <div class="bg-slate-50 p-3 rounded border flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Internal Logistics (IL)</span>
-                            <h4 id="area-il-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
-                            <span id="area-il-eval" class="text-[10px] text-emerald-700 font-semibold block">Eval. Promedio: 0%</span>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs" id="area-il-badge">0%</div>
-                    </div>
-                </div>
-
-                <!-- Gráfica General por Área -->
-                <div class="bg-slate-50 border rounded-lg p-3">
-                    <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
-                        <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                            <i class="fas fa-chart-bar text-blue-600 mr-1.5"></i> Comparativa de Estatus por Área (Roadmap GMB vs. Evaluación Semanal)
-                        </h3>
-                        <span class="text-[10px] text-gray-400 italic">Sincronizado en tiempo real con Firebase</span>
-                    </div>
-                    <div class="relative w-full h-56">
-                        <canvas id="areaStatusChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 1. PERFIL -->
         <div class="bg-white border rounded shadow-sm md:col-span-2 relative page-break-avoid">
@@ -453,6 +528,13 @@
             { id: "rh", name: "Recursos Humanos", icon: "fa-users", color: "text-orange-500" }
         ];
 
+        const roadmapColumnLabels = [
+            "KPI",
+            "SUB-KPI",
+            "CONTRAMEDIDAS",
+            "ACTIVIDADES DIARIAS"
+        ];
+
         const evalCriterios = [
             "Actitud y disposición para aprender",
             "Preparación para la Reunión",
@@ -533,6 +615,23 @@
             return name.replace(/[\s\.\#\$\/\[\]]/g, '_');
         }
 
+        function openAreaAnalyticsModal() {
+            const modal = document.getElementById("area-analytics-modal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            renderAreaAnalyticsModal();
+            if (areaStatusChart) {
+                areaStatusChart.resize();
+                areaStatusChart.update();
+            }
+        }
+
+        function closeAreaAnalyticsModal() {
+            const modal = document.getElementById("area-analytics-modal");
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+
         function initApp() {
             const selector = document.getElementById("gl-selector");
             selector.innerHTML = "";
@@ -586,12 +685,46 @@
             return Math.round(totalPctSum / roadmapTemas.length);
         }
 
-        function getLatestEvalPercentFromHistory(historyObj) {
-            if (!historyObj) return null;
+        function getSortedHistoryList(historyObj) {
+            if (!historyObj) return [];
             const list = Object.values(historyObj);
-            if (!list.length) return null;
             list.sort((a, b) => Number(b.id) - Number(a.id));
+            return list;
+        }
+
+        function getLatestEvalPercentFromHistory(historyObj) {
+            const list = getSortedHistoryList(historyObj);
+            if (!list.length) return null;
             return Number(list[0].percent) || 0;
+        }
+
+        function getWeekKey(timestampMs) {
+            const d = new Date(Number(timestampMs));
+            if (isNaN(d.getTime())) return null;
+            const temp = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            const dayNum = temp.getUTCDay() || 7;
+            temp.setUTCDate(temp.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(temp.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((temp - yearStart) / 86400000) + 1) / 7);
+            return `${temp.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+        }
+
+        function getWeeksElapsedSince(startMs) {
+            const diffMs = Math.max(0, Date.now() - Number(startMs));
+            return Math.max(1, Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000)));
+        }
+
+        function getGlNodeSnapshot(gl) {
+            const sKey = getSafeKey(gl.name);
+            const remoteNode = allEvaluacionesCache[sKey] || {};
+            let roadmapObj = remoteNode.roadmap;
+            if (gl.name === currentGL && Object.keys(roadmapData).length > 0) {
+                roadmapObj = roadmapData;
+            }
+            return {
+                roadmap: roadmapObj || null,
+                historyList: getSortedHistoryList(remoteNode.history)
+            };
         }
 
         function subscribeAllEvaluations() {
@@ -674,6 +807,181 @@
                         }
                     }
                 }
+            });
+        }
+
+        function renderAreaAnalyticsModal() {
+            const filterEl = document.getElementById("modal-area-filter");
+            const selectedArea = filterEl ? filterEl.value : "ALL";
+            const filteredGLs = selectedArea === "ALL"
+                ? groupLeaders
+                : groupLeaders.filter(g => g.area === selectedArea);
+
+            renderConstanciaEvaluaciones(filteredGLs);
+            renderPizarronToolsSummary(filteredGLs);
+            renderFocusPointsByArea(selectedArea);
+        }
+
+        function renderConstanciaEvaluaciones(gls) {
+            const tbody = document.getElementById("constancia-eval-body");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            gls.forEach(gl => {
+                const { historyList } = getGlNodeSnapshot(gl);
+                const totalEvals = historyList.length;
+                const uniqueWeeks = new Set(historyList.map(item => getWeekKey(item.id)).filter(Boolean));
+                const weeksCount = uniqueWeeks.size;
+
+                let expectedWeeks = 1;
+                let lastDateStr = "Sin registro";
+                let cumple = false;
+
+                if (totalEvals > 0) {
+                    const sortedAsc = [...historyList].sort((a, b) => Number(a.id) - Number(b.id));
+                    const firstId = Number(sortedAsc[0].id);
+                    expectedWeeks = getWeeksElapsedSince(firstId);
+                    lastDateStr = historyList[0].date || new Date(Number(historyList[0].id)).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+                    cumple = weeksCount >= expectedWeeks && totalEvals >= expectedWeeks;
+                }
+
+                const statusBadge = totalEvals === 0
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">Sin evaluaciones</span>`
+                    : (cumple
+                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700"><i class="fas fa-check mr-0.5"></i> Al día</span>`
+                        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800"><i class="fas fa-exclamation-triangle mr-0.5"></i> Pendiente</span>`);
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td class="py-1.5 px-2">
+                        <div class="font-bold text-slate-800">${esc(gl.name)}</div>
+                        <div class="text-[9px] text-gray-500 uppercase">${esc(gl.area)}</div>
+                    </td>
+                    <td class="py-1.5 px-2 text-center font-semibold">
+                        <span class="text-navy font-bold">${totalEvals}</span> <span class="text-gray-400">/ ${expectedWeeks} sem</span>
+                    </td>
+                    <td class="py-1.5 px-2 text-center text-gray-600">${esc(lastDateStr)}</td>
+                    <td class="py-1.5 px-2 text-center">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPizarronToolsSummary(gls) {
+            const container = document.getElementById("pizarron-tools-body");
+            if (!container) return;
+            container.innerHTML = "";
+
+            const areasToShow = gls.length === groupLeaders.length
+                ? ["ESTAMPADO", "SOLDADURA", "INTERNAL LOGISTICS"]
+                : [...new Set(gls.map(g => g.area))];
+
+            areasToShow.forEach(areaName => {
+                const areaGLs = gls.filter(g => g.area === areaName);
+                if (!areaGLs.length) return;
+
+                const colStats = roadmapColumnLabels.map((label, colIdx) => {
+                    let activeCount = 0; // estatus 2 (En operación) o 3 (Estandarizado)
+                    let startedCount = 0; // estatus >= 1
+                    let totalSlots = 0;
+
+                    areaGLs.forEach(gl => {
+                        const { roadmap } = getGlNodeSnapshot(gl);
+                        roadmapTemas.forEach(tema => {
+                            totalSlots++;
+                            const val = roadmap && Array.isArray(roadmap[tema.id]) ? Number(roadmap[tema.id][colIdx] || 0) : 0;
+                            if (val >= 1) startedCount++;
+                            if (val >= 2) activeCount++;
+                        });
+                    });
+
+                    const activePct = totalSlots > 0 ? Math.round((activeCount / totalSlots) * 100) : 0;
+                    const startedPct = totalSlots > 0 ? Math.round((startedCount / totalSlots) * 100) : 0;
+                    return { label, activePct, startedPct };
+                });
+
+                const avgConstancia = Math.round(colStats.reduce((acc, c) => acc + c.activePct, 0) / colStats.length);
+
+                const block = document.createElement("div");
+                block.className = "p-2.5 rounded border bg-slate-50";
+                block.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-slate-800 text-[11px] uppercase">${esc(areaName)} (${areaGLs.length} GL)</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white border text-slate-700">Constancia activa: ${avgConstancia}%</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        ${colStats.map(c => `
+                            <div class="bg-white p-2 rounded border">
+                                <div class="text-[9px] font-bold text-gray-500 uppercase truncate">${esc(c.label)}</div>
+                                <div class="text-sm font-bold text-navy mt-0.5">${c.activePct}%</div>
+                                <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1 overflow-hidden">
+                                    <div class="bg-emerald-600 h-1.5 rounded-full" style="width: ${c.activePct}%"></div>
+                                </div>
+                                <div class="text-[9px] text-gray-400 mt-1">Iniciado: ${c.startedPct}%</div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+                container.appendChild(block);
+            });
+        }
+
+        function renderFocusPointsByArea(selectedArea) {
+            const container = document.getElementById("focus-points-body");
+            if (!container) return;
+            container.innerHTML = "";
+
+            const areas = selectedArea === "ALL"
+                ? ["ESTAMPADO", "SOLDADURA", "INTERNAL LOGISTICS"]
+                : [selectedArea];
+
+            areas.forEach(areaName => {
+                const areaGLs = groupLeaders.filter(g => g.area === areaName);
+                const auditorItems = [];
+                const glItems = [];
+
+                areaGLs.forEach(gl => {
+                    const { historyList } = getGlNodeSnapshot(gl);
+                    if (historyList.length > 0) {
+                        const latest = historyList[0];
+                        const obs = (latest.observations || "").trim();
+                        const agr = (latest.agreements || "").trim();
+                        const evalBy = (latest.evaluator || "").trim();
+
+                        if (obs && obs.toLowerCase() !== "sin observaciones") {
+                            auditorItems.push(`<strong>${esc(gl.name)}</strong>${evalBy && evalBy.toLowerCase() !== "sin especificar" ? ` <em>(${esc(evalBy)})</em>` : ""}: ${esc(obs)}`);
+                        }
+                        if (agr && agr.toLowerCase() !== "sin acuerdos") {
+                            glItems.push(`<strong>${esc(gl.name)}</strong>: ${esc(agr)}`);
+                        }
+                    }
+                });
+
+                const card = document.createElement("div");
+                card.className = "border rounded-lg p-3 bg-slate-50 space-y-2";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b pb-1.5">
+                        <span class="font-bold text-navy text-xs uppercase">${esc(areaName)}</span>
+                        <span class="text-[10px] text-gray-500 font-semibold">Focus Point por Área</span>
+                    </div>
+                    <div class="bg-white p-2.5 rounded border">
+                        <div class="text-[10px] font-bold text-blue-700 uppercase mb-1">
+                            <i class="fas fa-user-check mr-1"></i> Para el Auditor / Coach (Hallazgos y Seguimiento)
+                        </div>
+                        ${auditorItems.length > 0
+                            ? `<ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-700">${auditorItems.map(i => `<li>${i}</li>`).join("")}</ul>`
+                            : `<p class="text-[11px] text-gray-400 italic">Sin hallazgos recientes registrados en esta área.</p>`}
+                    </div>
+                    <div class="bg-white p-2.5 rounded border">
+                        <div class="text-[10px] font-bold text-emerald-700 uppercase mb-1">
+                            <i class="fas fa-tasks mr-1"></i> Para el GL Evaluado (Compromisos y Fortalecimiento)
+                        </div>
+                        ${glItems.length > 0
+                            ? `<ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-700">${glItems.map(i => `<li>${i}</li>`).join("")}</ul>`
+                            : `<p class="text-[11px] text-gray-400 italic">Sin acuerdos o compromisos recientes registrados en esta área.</p>`}
+                    </div>
+                `;
+                container.appendChild(card);
             });
         }
 
@@ -862,6 +1170,11 @@
                 areaStatusChart.data.datasets[0].data = [stampGmb, weldGmb, ilGmb];
                 areaStatusChart.data.datasets[1].data = [stampEval, weldEval, ilEval];
                 areaStatusChart.update();
+            }
+
+            const modalEl = document.getElementById("area-analytics-modal");
+            if (modalEl && !modalEl.classList.contains("hidden")) {
+                renderAreaAnalyticsModal();
             }
         }
 
