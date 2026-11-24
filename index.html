@@ -152,15 +152,15 @@
                     </div>
                 </div>
 
-                <!-- Gráfica General por Área -->
+                <!-- Gráfica Única Consolidada por Área -->
                 <div class="bg-slate-50 border rounded-lg p-3.5">
                     <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
                         <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center">
-                            <i class="fas fa-chart-bar text-blue-600 mr-1.5"></i> Gráfica de Estatus por Área (Roadmap GMB vs. Evaluación Semanal)
+                            <i class="fas fa-chart-bar text-blue-600 mr-1.5"></i> Gráfica General por Área (Roadmap GMB, Evaluación Semanal y Uso/Constancia en Pizarrón)
                         </h3>
-                        <span class="text-[10px] text-gray-500">Promedio de avance del pizarrón y calificación de revisión</span>
+                        <span class="text-[10px] text-gray-500">Consolidado en una sola vista por área</span>
                     </div>
-                    <div class="relative w-full h-56">
+                    <div class="relative w-full h-60">
                         <canvas id="areaStatusChart"></canvas>
                     </div>
                 </div>
@@ -685,6 +685,22 @@
             return Math.round(totalPctSum / roadmapTemas.length);
         }
 
+        function calculatePizarronConstancyPercentFromObj(roadmapObj) {
+            if (!roadmapObj) return 0;
+            let activeCount = 0;
+            let totalSlots = 0;
+            roadmapTemas.forEach(tema => {
+                const arr = Array.isArray(roadmapObj[tema.id]) ? roadmapObj[tema.id] : [0, 0, 0, 0];
+                for (let i = 0; i < 4; i++) {
+                    totalSlots++;
+                    if (Number(arr[i] || 0) >= 2) {
+                        activeCount++;
+                    }
+                }
+            });
+            return totalSlots > 0 ? Math.round((activeCount / totalSlots) * 100) : 0;
+        }
+
         function getSortedHistoryList(historyObj) {
             if (!historyObj) return [];
             const list = Object.values(historyObj);
@@ -753,20 +769,26 @@
                         {
                             label: "Avance Roadmap GMB (%)",
                             data: [0, 0, 0],
-                            backgroundColor: ["#2563eb", "#7c3aed", "#059669"],
+                            backgroundColor: "#2563eb",
                             borderRadius: 6,
-                            barPercentage: 0.65,
-                            categoryPercentage: 0.6
+                            barPercentage: 0.72,
+                            categoryPercentage: 0.62
                         },
                         {
                             label: "Promedio Evaluación Semanal (%)",
                             data: [0, 0, 0],
-                            backgroundColor: ["rgba(37, 99, 235, 0.35)", "rgba(124, 58, 237, 0.35)", "rgba(5, 150, 105, 0.35)"],
-                            borderColor: ["#1d4ed8", "#6d28d9", "#047857"],
-                            borderWidth: 1.5,
+                            backgroundColor: "#7c3aed",
                             borderRadius: 6,
-                            barPercentage: 0.65,
-                            categoryPercentage: 0.6
+                            barPercentage: 0.72,
+                            categoryPercentage: 0.62
+                        },
+                        {
+                            label: "Uso y Constancia en Pizarrón (%)",
+                            data: [0, 0, 0],
+                            backgroundColor: "#059669",
+                            borderRadius: 6,
+                            barPercentage: 0.72,
+                            categoryPercentage: 0.62
                         }
                     ]
                 },
@@ -1113,20 +1135,23 @@
             localStorage.setItem(`gmb_pct_${getSafeKey(currentGL)}`, String(currentPctVal));
 
             const stats = {
-                "ESTAMPADO": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0 },
-                "SOLDADURA": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0 },
-                "INTERNAL LOGISTICS": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0 }
+                "ESTAMPADO": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0, pizarronSum: 0 },
+                "SOLDADURA": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0, pizarronSum: 0 },
+                "INTERNAL LOGISTICS": { gmbSum: 0, count: 0, evalSum: 0, evalCount: 0, pizarronSum: 0 }
             };
 
             groupLeaders.forEach(gl => {
                 const sKey = getSafeKey(gl.name);
                 const glNode = allEvaluacionesCache[sKey];
                 let gmbVal = 0;
+                let pizarronVal = 0;
 
                 if (gl.name === currentGL) {
                     gmbVal = currentPctVal;
+                    pizarronVal = calculatePizarronConstancyPercentFromObj(roadmapData);
                 } else if (glNode && glNode.roadmap) {
                     gmbVal = calculateRoadmapPercentFromObj(glNode.roadmap);
+                    pizarronVal = calculatePizarronConstancyPercentFromObj(glNode.roadmap);
                 } else {
                     const savedPct = localStorage.getItem(`gmb_pct_${sKey}`);
                     gmbVal = savedPct !== null ? (parseInt(savedPct, 10) || 0) : 0;
@@ -1136,6 +1161,7 @@
 
                 if (stats[gl.area]) {
                     stats[gl.area].gmbSum += gmbVal;
+                    stats[gl.area].pizarronSum += pizarronVal;
                     stats[gl.area].count++;
                     if (latestEval !== null) {
                         stats[gl.area].evalSum += latestEval;
@@ -1154,21 +1180,26 @@
             const weldEval = calcAvg(stats["SOLDADURA"].evalSum, stats["SOLDADURA"].evalCount);
             const ilEval = calcAvg(stats["INTERNAL LOGISTICS"].evalSum, stats["INTERNAL LOGISTICS"].evalCount);
 
+            const stampPizarron = calcAvg(stats["ESTAMPADO"].pizarronSum, stats["ESTAMPADO"].count);
+            const weldPizarron = calcAvg(stats["SOLDADURA"].pizarronSum, stats["SOLDADURA"].count);
+            const ilPizarron = calcAvg(stats["INTERNAL LOGISTICS"].pizarronSum, stats["INTERNAL LOGISTICS"].count);
+
             document.getElementById("area-estampado-text").innerHTML = `${stampGmb}% <span class="text-[10px] font-normal text-gray-500">GMB</span>`;
             document.getElementById("area-estampado-badge").textContent = `${stampGmb}%`;
-            document.getElementById("area-estampado-eval").textContent = `Eval. Promedio: ${stampEval}%`;
+            document.getElementById("area-estampado-eval").textContent = `Eval: ${stampEval}% · Pizarrón: ${stampPizarron}%`;
 
             document.getElementById("area-soldadura-text").innerHTML = `${weldGmb}% <span class="text-[10px] font-normal text-gray-500">GMB</span>`;
             document.getElementById("area-soldadura-badge").textContent = `${weldGmb}%`;
-            document.getElementById("area-soldadura-eval").textContent = `Eval. Promedio: ${weldEval}%`;
+            document.getElementById("area-soldadura-eval").textContent = `Eval: ${weldEval}% · Pizarrón: ${weldPizarron}%`;
 
             document.getElementById("area-il-text").innerHTML = `${ilGmb}% <span class="text-[10px] font-normal text-gray-500">GMB</span>`;
             document.getElementById("area-il-badge").textContent = `${ilGmb}%`;
-            document.getElementById("area-il-eval").textContent = `Eval. Promedio: ${ilEval}%`;
+            document.getElementById("area-il-eval").textContent = `Eval: ${ilEval}% · Pizarrón: ${ilPizarron}%`;
 
             if (areaStatusChart) {
                 areaStatusChart.data.datasets[0].data = [stampGmb, weldGmb, ilGmb];
                 areaStatusChart.data.datasets[1].data = [stampEval, weldEval, ilEval];
+                areaStatusChart.data.datasets[2].data = [stampPizarron, weldPizarron, ilPizarron];
                 areaStatusChart.update();
             }
 
