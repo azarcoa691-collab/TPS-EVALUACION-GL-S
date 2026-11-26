@@ -130,7 +130,7 @@
                         <div>
                             <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Estampado</span>
                             <h4 id="area-estampado-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
-                            <span id="area-estampado-eval" class="text-[10px] text-blue-700 font-semibold block">Eval. Promedio: 0%</span>
+                            <span id="area-estampado-eval" class="text-[10px] text-blue-700 font-semibold block">Eval: 0% · Pizarrón: 0%</span>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs" id="area-estampado-badge">0%</div>
                     </div>
@@ -138,7 +138,7 @@
                         <div>
                             <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Soldadura</span>
                             <h4 id="area-soldadura-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
-                            <span id="area-soldadura-eval" class="text-[10px] text-purple-700 font-semibold block">Eval. Promedio: 0%</span>
+                            <span id="area-soldadura-eval" class="text-[10px] text-purple-700 font-semibold block">Eval: 0% · Pizarrón: 0%</span>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs" id="area-soldadura-badge">0%</div>
                     </div>
@@ -146,7 +146,7 @@
                         <div>
                             <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Internal Logistics (IL)</span>
                             <h4 id="area-il-text" class="text-lg font-bold text-navy">0% <span class="text-[10px] font-normal text-gray-500">GMB</span></h4>
-                            <span id="area-il-eval" class="text-[10px] text-emerald-700 font-semibold block">Eval. Promedio: 0%</span>
+                            <span id="area-il-eval" class="text-[10px] text-emerald-700 font-semibold block">Eval: 0% · Pizarrón: 0%</span>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs" id="area-il-badge">0%</div>
                     </div>
@@ -165,9 +165,9 @@
                     </div>
                 </div>
 
-                <!-- Sección 1 y 2: Constancia Semanal + Uso y Constancia de Herramientas en Pizarrón -->
+                <!-- Sección 1 y 2: Gráfico de Constancia Semanal + Gráfico de Uso y Constancia en Pizarrón -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <!-- 1. Constancia de Evaluaciones (mínimo 1 por semana) -->
+                    <!-- 1. Constancia de Evaluaciones (Gráfico por GL / Área) -->
                     <div class="bg-white border rounded-lg p-3.5 shadow-sm">
                         <div class="flex items-center justify-between mb-2">
                             <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
@@ -175,19 +175,7 @@
                             </h3>
                             <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold">Meta: ≥ 1 / sem</span>
                         </div>
-                        <div class="overflow-x-auto max-h-60 overflow-y-auto">
-                            <table class="w-full text-left border-collapse text-[11px]">
-                                <thead class="bg-slate-100 text-slate-600 uppercase text-[10px] sticky top-0">
-                                    <tr>
-                                        <th class="py-1.5 px-2">Group Leader / Área</th>
-                                        <th class="py-1.5 px-2 text-center">Reg. / Meta</th>
-                                        <th class="py-1.5 px-2 text-center">Última Fecha</th>
-                                        <th class="py-1.5 px-2 text-center">Estatus</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="constancia-eval-body" class="divide-y divide-slate-100"></tbody>
-                            </table>
-                        </div>
+                        <div class="space-y-3 max-h-60 overflow-y-auto pr-1" id="constancia-eval-body"></div>
                     </div>
 
                     <!-- 2. Uso, Aplicación y Constancia de Herramientas en Pizarrón -->
@@ -730,6 +718,28 @@
             return Math.max(1, Math.ceil(diffMs / (7 * 24 * 60 * 60 * 1000)));
         }
 
+        function getGlConstancyMetrics(gl) {
+            const { historyList } = getGlNodeSnapshot(gl);
+            const totalEvals = historyList.length;
+            const uniqueWeeks = new Set(historyList.map(item => getWeekKey(item.id)).filter(Boolean));
+            const weeksCount = uniqueWeeks.size;
+
+            let expectedWeeks = 1;
+            let lastDateStr = "Sin registro";
+            let constancyPct = 0;
+
+            if (totalEvals > 0) {
+                const sortedAsc = [...historyList].sort((a, b) => Number(a.id) - Number(b.id));
+                const firstId = Number(sortedAsc[0].id);
+                expectedWeeks = getWeeksElapsedSince(firstId);
+                lastDateStr = historyList[0].date || new Date(Number(historyList[0].id)).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+                const effectiveCount = Math.min(totalEvals, weeksCount);
+                constancyPct = Math.min(100, Math.round((effectiveCount / expectedWeeks) * 100));
+            }
+
+            return { totalEvals, expectedWeeks, lastDateStr, constancyPct };
+        }
+
         function getGlNodeSnapshot(gl) {
             const sKey = getSafeKey(gl.name);
             const remoteNode = allEvaluacionesCache[sKey] || {};
@@ -845,47 +855,58 @@
         }
 
         function renderConstanciaEvaluaciones(gls) {
-            const tbody = document.getElementById("constancia-eval-body");
-            if (!tbody) return;
-            tbody.innerHTML = "";
+            const container = document.getElementById("constancia-eval-body");
+            if (!container) return;
+            container.innerHTML = "";
 
-            gls.forEach(gl => {
-                const { historyList } = getGlNodeSnapshot(gl);
-                const totalEvals = historyList.length;
-                const uniqueWeeks = new Set(historyList.map(item => getWeekKey(item.id)).filter(Boolean));
-                const weeksCount = uniqueWeeks.size;
+            const areasToShow = gls.length === groupLeaders.length
+                ? ["ESTAMPADO", "SOLDADURA", "INTERNAL LOGISTICS"]
+                : [...new Set(gls.map(g => g.area))];
 
-                let expectedWeeks = 1;
-                let lastDateStr = "Sin registro";
-                let cumple = false;
+            areasToShow.forEach(areaName => {
+                const areaGLs = gls.filter(g => g.area === areaName);
+                if (!areaGLs.length) return;
 
-                if (totalEvals > 0) {
-                    const sortedAsc = [...historyList].sort((a, b) => Number(a.id) - Number(b.id));
-                    const firstId = Number(sortedAsc[0].id);
-                    expectedWeeks = getWeeksElapsedSince(firstId);
-                    lastDateStr = historyList[0].date || new Date(Number(historyList[0].id)).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-                    cumple = weeksCount >= expectedWeeks && totalEvals >= expectedWeeks;
-                }
+                const glMetrics = areaGLs.map(gl => ({
+                    gl,
+                    ...getGlConstancyMetrics(gl)
+                }));
 
-                const statusBadge = totalEvals === 0
-                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">Sin evaluaciones</span>`
-                    : (cumple
-                        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700"><i class="fas fa-check mr-0.5"></i> Al día</span>`
-                        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800"><i class="fas fa-exclamation-triangle mr-0.5"></i> Pendiente</span>`);
+                const areaAvgPct = Math.round(
+                    glMetrics.reduce((acc, m) => acc + m.constancyPct, 0) / glMetrics.length
+                );
 
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td class="py-1.5 px-2">
-                        <div class="font-bold text-slate-800">${esc(gl.name)}</div>
-                        <div class="text-[9px] text-gray-500 uppercase">${esc(gl.area)}</div>
-                    </td>
-                    <td class="py-1.5 px-2 text-center font-semibold">
-                        <span class="text-navy font-bold">${totalEvals}</span> <span class="text-gray-400">/ ${expectedWeeks} sem</span>
-                    </td>
-                    <td class="py-1.5 px-2 text-center text-gray-600">${esc(lastDateStr)}</td>
-                    <td class="py-1.5 px-2 text-center">${statusBadge}</td>
+                const block = document.createElement("div");
+                block.className = "p-2.5 rounded border bg-slate-50";
+                block.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-slate-800 text-[11px] uppercase">${esc(areaName)} (${areaGLs.length} GL)</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white border text-slate-700">Cumplimiento: ${areaAvgPct}%</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${glMetrics.map(m => {
+                            const barColor = m.constancyPct >= 80
+                                ? "bg-emerald-600"
+                                : (m.constancyPct >= 50 ? "bg-amber-500" : "bg-red-500");
+                            return `
+                                <div class="bg-white p-2 rounded border">
+                                    <div class="flex items-center justify-between gap-1">
+                                        <span class="text-[10px] font-bold text-slate-800 truncate" title="${esc(m.gl.name)}">${esc(m.gl.name)}</span>
+                                        <span class="text-xs font-bold text-navy shrink-0">${m.constancyPct}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1 overflow-hidden">
+                                        <div class="${barColor} h-1.5 rounded-full" style="width: ${m.constancyPct}%"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[9px] text-gray-500 mt-1">
+                                        <span>${m.totalEvals} / ${m.expectedWeeks} sem</span>
+                                        <span>${esc(m.lastDateStr)}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                container.appendChild(block);
             });
         }
 
