@@ -40,11 +40,38 @@
         @page { size: letter portrait; margin: 4mm; }
 
         @media print {
-            header, #view-mode-banner, #area-analytics-modal, .no-print, button { display: none !important; }
+            header, #view-mode-banner, .no-print, button { display: none !important; }
             html, body {
                 background-color: white !important; padding: 0 !important; margin: 0 !important;
                 -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
                 font-size: 9.5px !important;
+            }
+            body.printing-area-summary #pdf-content,
+            body.printing-area-summary #login-modal {
+                display: none !important;
+            }
+            body.printing-area-summary #area-analytics-modal {
+                position: static !important;
+                display: block !important;
+                background: white !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                max-height: none !important;
+            }
+            body.printing-area-summary #area-analytics-modal > div {
+                box-shadow: none !important;
+                border: none !important;
+                max-width: 100% !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+            body.printing-area-summary #area-analytics-scroll {
+                max-height: none !important;
+                overflow: visible !important;
+                padding: 4px !important;
+            }
+            body.printing-area-summary #print-area-summary-date {
+                display: flex !important;
             }
             #pdf-content {
                 box-shadow: none !important; padding: 0 !important; margin: 0 !important;
@@ -98,34 +125,43 @@
     </div>
 
     <!-- MODAL DE CONSULTA DE GRÁFICA Y ESTATUS POR ÁREA -->
-    <div id="area-analytics-modal" class="fixed inset-0 bg-slate-900 bg-opacity-75 z-50 hidden items-center justify-center p-3 sm:p-6 overflow-y-auto no-print">
+    <div id="area-analytics-modal" class="fixed inset-0 bg-slate-900 bg-opacity-75 z-50 hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full my-auto border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col">
             <!-- Encabezado del Modal -->
             <div class="bg-navy text-white px-5 py-3.5 flex flex-wrap justify-between items-center gap-3 shrink-0">
                 <div class="flex items-center gap-2.5">
                     <i class="fas fa-chart-pie text-emerald-400 text-base"></i>
                     <div>
-                        <h2 class="text-sm sm:text-base font-bold uppercase tracking-wider">Estatus General por Área, Constancia y Focus Points</h2>
+                        <h2 class="text-sm sm:text-base font-bold uppercase tracking-wider">Estatus General y Gráficos por Área</h2>
                         <p class="text-[11px] text-slate-300">Consolidado en tiempo real de Estampado, Soldadura e Internal Logistics (IL)</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 no-print">
                     <select id="modal-area-filter" onchange="renderAreaAnalyticsModal()" class="bg-slate-800 text-white border border-slate-600 rounded px-2.5 py-1.5 text-xs font-semibold outline-none">
                         <option value="ALL">Todas las Áreas</option>
                         <option value="ESTAMPADO">Estampado</option>
                         <option value="SOLDADURA">Soldadura</option>
                         <option value="INTERNAL LOGISTICS">Internal Logistics (IL)</option>
                     </select>
+                    <button onclick="printAreaSummaryToDate()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5 shadow">
+                        <i class="fas fa-print"></i> Imprimir Resumen a la Fecha
+                    </button>
                     <button onclick="closeAreaAnalyticsModal()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center gap-1.5">
                         <i class="fas fa-times"></i> Cerrar
                     </button>
                 </div>
             </div>
 
+            <!-- Fecha de Corte visible al imprimir -->
+            <div id="print-area-summary-date" class="hidden bg-slate-100 border-b px-5 py-2 text-[11px] text-slate-700 justify-between items-center font-semibold">
+                <span><i class="fas fa-calendar-day mr-1 text-blue-600"></i> Fecha de corte del resumen: <strong id="area-summary-cutoff-date">--</strong></span>
+                <span id="area-summary-filter-label" class="uppercase text-slate-500">Áreas: Todas</span>
+            </div>
+
             <!-- Contenido Desplazable -->
-            <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs">
+            <div id="area-analytics-scroll" class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs">
                 <!-- Tarjetas de Promedio por Área -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 page-break-avoid">
                     <div class="bg-slate-50 p-3 rounded-lg border flex items-center justify-between">
                         <div>
                             <span class="text-[10px] text-gray-500 uppercase font-bold block">Área Estampado</span>
@@ -153,7 +189,7 @@
                 </div>
 
                 <!-- Gráfica Única Consolidada por Área -->
-                <div class="bg-slate-50 border rounded-lg p-3.5">
+                <div class="bg-slate-50 border rounded-lg p-3.5 page-break-avoid">
                     <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
                         <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider flex items-center">
                             <i class="fas fa-chart-bar text-blue-600 mr-1.5"></i> Gráfica General por Área (Roadmap GMB, Evaluación Semanal y Uso/Constancia en Pizarrón)
@@ -165,13 +201,13 @@
                     </div>
                 </div>
 
-                <!-- Sección 1 y 2: Gráfico de Constancia Semanal + Gráfico de Uso y Constancia en Pizarrón -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Gráficos de Constancia Semanal + Uso y Constancia de Herramientas en Pizarrón -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 page-break-avoid">
                     <!-- 1. Constancia de Evaluaciones (Gráfico por GL / Área) -->
                     <div class="bg-white border rounded-lg p-3.5 shadow-sm">
                         <div class="flex items-center justify-between mb-2">
                             <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                                <i class="fas fa-calendar-check text-emerald-600 mr-1.5"></i> 1. Constancia de Evaluaciones (Mín. 1 / Semana)
+                                <i class="fas fa-calendar-check text-emerald-600 mr-1.5"></i> Constancia de Evaluaciones (Mín. 1 / Semana)
                             </h3>
                             <span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded font-semibold">Meta: ≥ 1 / sem</span>
                         </div>
@@ -182,23 +218,12 @@
                     <div class="bg-white border rounded-lg p-3.5 shadow-sm">
                         <div class="flex items-center justify-between mb-2">
                             <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                                <i class="fas fa-chalkboard text-purple-600 mr-1.5"></i> 2. Uso y Constancia en Pizarrón (GMB)
+                                <i class="fas fa-chalkboard text-purple-600 mr-1.5"></i> Uso y Constancia en Pizarrón (GMB)
                             </h3>
                             <span class="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded font-semibold">Operación / Estandarizado</span>
                         </div>
                         <div class="space-y-3 max-h-60 overflow-y-auto pr-1" id="pizarron-tools-body"></div>
                     </div>
-                </div>
-
-                <!-- 3. Resumen de Puntos o Hallazgos (Focus Point) por Área -->
-                <div class="bg-white border rounded-lg p-3.5 shadow-sm">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <h3 class="text-[11px] font-bold text-slate-800 uppercase tracking-wider flex items-center">
-                            <i class="fas fa-bullseye text-amber-600 mr-1.5"></i> 3. Resumen de Hallazgos y Focus Points por Área (Auditor y GL Evaluado)
-                        </h3>
-                        <span class="text-[10px] text-gray-500">Para enfocar coaching, seguimiento y fortalecimiento</span>
-                    </div>
-                    <div id="focus-points-body" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
                 </div>
             </div>
         </div>
@@ -620,6 +645,47 @@
             modal.classList.remove("flex");
         }
 
+        function printAreaSummaryToDate() {
+            renderAreaAnalyticsModal();
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('es-MX', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+            const formattedTime = now.toLocaleTimeString('es-MX', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const cutoffEl = document.getElementById("area-summary-cutoff-date");
+            if (cutoffEl) cutoffEl.textContent = `${formattedDate} (${formattedTime})`;
+
+            const filterSelect = document.getElementById("modal-area-filter");
+            const filterLabelEl = document.getElementById("area-summary-filter-label");
+            if (filterSelect && filterLabelEl) {
+                const chosenText = filterSelect.options[filterSelect.selectedIndex]?.text || "Todas las Áreas";
+                filterLabelEl.textContent = `Filtro: ${chosenText}`;
+            }
+
+            if (areaStatusChart) {
+                areaStatusChart.resize();
+                areaStatusChart.update();
+            }
+
+            document.body.classList.add("printing-area-summary");
+            const cleanup = () => {
+                document.body.classList.remove("printing-area-summary");
+                window.removeEventListener("afterprint", cleanup);
+            };
+            window.addEventListener("afterprint", cleanup);
+
+            setTimeout(() => {
+                window.print();
+                setTimeout(cleanup, 500);
+            }, 120);
+        }
+
         function initApp() {
             const selector = document.getElementById("gl-selector");
             selector.innerHTML = "";
@@ -851,7 +917,6 @@
 
             renderConstanciaEvaluaciones(filteredGLs);
             renderPizarronToolsSummary(filteredGLs);
-            renderFocusPointsByArea(selectedArea);
         }
 
         function renderConstanciaEvaluaciones(gls) {
@@ -966,65 +1031,6 @@
                     </div>
                 `;
                 container.appendChild(block);
-            });
-        }
-
-        function renderFocusPointsByArea(selectedArea) {
-            const container = document.getElementById("focus-points-body");
-            if (!container) return;
-            container.innerHTML = "";
-
-            const areas = selectedArea === "ALL"
-                ? ["ESTAMPADO", "SOLDADURA", "INTERNAL LOGISTICS"]
-                : [selectedArea];
-
-            areas.forEach(areaName => {
-                const areaGLs = groupLeaders.filter(g => g.area === areaName);
-                const auditorItems = [];
-                const glItems = [];
-
-                areaGLs.forEach(gl => {
-                    const { historyList } = getGlNodeSnapshot(gl);
-                    if (historyList.length > 0) {
-                        const latest = historyList[0];
-                        const obs = (latest.observations || "").trim();
-                        const agr = (latest.agreements || "").trim();
-                        const evalBy = (latest.evaluator || "").trim();
-
-                        if (obs && obs.toLowerCase() !== "sin observaciones") {
-                            auditorItems.push(`<strong>${esc(gl.name)}</strong>${evalBy && evalBy.toLowerCase() !== "sin especificar" ? ` <em>(${esc(evalBy)})</em>` : ""}: ${esc(obs)}`);
-                        }
-                        if (agr && agr.toLowerCase() !== "sin acuerdos") {
-                            glItems.push(`<strong>${esc(gl.name)}</strong>: ${esc(agr)}`);
-                        }
-                    }
-                });
-
-                const card = document.createElement("div");
-                card.className = "border rounded-lg p-3 bg-slate-50 space-y-2";
-                card.innerHTML = `
-                    <div class="flex items-center justify-between border-b pb-1.5">
-                        <span class="font-bold text-navy text-xs uppercase">${esc(areaName)}</span>
-                        <span class="text-[10px] text-gray-500 font-semibold">Focus Point por Área</span>
-                    </div>
-                    <div class="bg-white p-2.5 rounded border">
-                        <div class="text-[10px] font-bold text-blue-700 uppercase mb-1">
-                            <i class="fas fa-user-check mr-1"></i> Para el Auditor / Coach (Hallazgos y Seguimiento)
-                        </div>
-                        ${auditorItems.length > 0
-                            ? `<ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-700">${auditorItems.map(i => `<li>${i}</li>`).join("")}</ul>`
-                            : `<p class="text-[11px] text-gray-400 italic">Sin hallazgos recientes registrados en esta área.</p>`}
-                    </div>
-                    <div class="bg-white p-2.5 rounded border">
-                        <div class="text-[10px] font-bold text-emerald-700 uppercase mb-1">
-                            <i class="fas fa-tasks mr-1"></i> Para el GL Evaluado (Compromisos y Fortalecimiento)
-                        </div>
-                        ${glItems.length > 0
-                            ? `<ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-700">${glItems.map(i => `<li>${i}</li>`).join("")}</ul>`
-                            : `<p class="text-[11px] text-gray-400 italic">Sin acuerdos o compromisos recientes registrados en esta área.</p>`}
-                    </div>
-                `;
-                container.appendChild(card);
             });
         }
 
