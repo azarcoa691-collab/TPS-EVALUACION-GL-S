@@ -52,23 +52,47 @@
             }
             body.printing-area-summary #area-analytics-modal {
                 position: static !important;
+                inset: auto !important;
                 display: block !important;
                 background: white !important;
                 padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
                 overflow: visible !important;
                 max-height: none !important;
             }
             body.printing-area-summary #area-analytics-modal > div {
+                display: block !important;
                 box-shadow: none !important;
                 border: none !important;
+                border-radius: 0 !important;
                 max-width: 100% !important;
+                width: 100% !important;
                 max-height: none !important;
+                height: auto !important;
                 overflow: visible !important;
             }
             body.printing-area-summary #area-analytics-scroll {
+                display: block !important;
                 max-height: none !important;
+                height: auto !important;
                 overflow: visible !important;
-                padding: 4px !important;
+                padding: 6px !important;
+            }
+            body.printing-area-summary #area-analytics-scroll > * {
+                margin-bottom: 10px !important;
+            }
+            body.printing-area-summary #area-chart-wrapper {
+                position: relative !important;
+                width: 100% !important;
+                height: 185px !important;
+                max-height: 185px !important;
+                overflow: hidden !important;
+            }
+            body.printing-area-summary #areaStatusChart {
+                width: 100% !important;
+                height: 100% !important;
+                max-height: 185px !important;
             }
             body.printing-area-summary #print-area-summary-date {
                 display: flex !important;
@@ -196,7 +220,7 @@
                         </h3>
                         <span class="text-[10px] text-gray-500">Consolidado en una sola vista por área</span>
                     </div>
-                    <div class="relative w-full h-60">
+                    <div id="area-chart-wrapper" class="relative w-full h-60">
                         <canvas id="areaStatusChart"></canvas>
                     </div>
                 </div>
@@ -668,22 +692,28 @@
                 filterLabelEl.textContent = `Filtro: ${chosenText}`;
             }
 
-            if (areaStatusChart) {
-                areaStatusChart.resize();
-                areaStatusChart.update();
-            }
-
             document.body.classList.add("printing-area-summary");
+
+            const refreshChart = () => {
+                if (areaStatusChart) {
+                    areaStatusChart.resize();
+                    areaStatusChart.update('none');
+                }
+            };
+
             const cleanup = () => {
                 document.body.classList.remove("printing-area-summary");
                 window.removeEventListener("afterprint", cleanup);
+                setTimeout(refreshChart, 80);
             };
             window.addEventListener("afterprint", cleanup);
 
+            refreshChart();
             setTimeout(() => {
+                refreshChart();
                 window.print();
-                setTimeout(cleanup, 500);
-            }, 120);
+                setTimeout(cleanup, 600);
+            }, 180);
         }
 
         function initApp() {
@@ -871,6 +901,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
                     plugins: {
                         legend: {
                             position: "top",
